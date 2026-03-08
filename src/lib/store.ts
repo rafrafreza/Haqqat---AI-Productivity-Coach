@@ -102,6 +102,68 @@ export interface TimeBlock {
   taskId?: string;
 }
 
+// ===== GAMIFICATION TYPES =====
+
+export interface XPEvent {
+  id: string;
+  date: string;
+  source: 'routine' | 'task' | 'focus' | 'goal' | 'review' | 'energy' | 'decision' | 'letter' | 'morning-ritual' | 'streak-bonus';
+  amount: number;
+  description: string;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'consistency' | 'mastery' | 'explorer' | 'milestone';
+  condition: (stats: GamificationStats) => boolean;
+  xpReward: number;
+}
+
+export interface GamificationStats {
+  totalXP: number;
+  level: number;
+  currentLevelXP: number;
+  nextLevelXP: number;
+  totalRoutinesCompleted: number;
+  totalTasksCompleted: number;
+  totalFocusMinutes: number;
+  totalGoalsCompleted: number;
+  totalReviews: number;
+  totalDecisions: number;
+  totalLetters: number;
+  totalEnergyLogs: number;
+  totalMorningRituals: number;
+  longestStreak: number;
+  currentStreak: number;
+  daysActive: number;
+  unlockedAchievements: string[];
+}
+
+export interface MorningRitual {
+  id: string;
+  date: string;
+  topPriorities: string[]; // max 3
+  timeBlocks: RitualTimeBlock[];
+  yesterdayReflection?: string;
+  yesterdayPredictionAccuracy?: number; // 1-5
+  intentionWord: string; // one word for the day
+  energyForecast: 'low' | 'medium' | 'high' | 'peak';
+  gratitude: string[];
+  completedAt: string;
+}
+
+export interface RitualTimeBlock {
+  id: string;
+  startTime: string;
+  endTime: string;
+  label: string;
+  energyMatch: 'aligned' | 'misaligned' | 'neutral';
+  taskId?: string;
+}
+
 // ===== UNIQUE FEATURE TYPES =====
 
 export interface EnergyLog {
@@ -189,6 +251,9 @@ const KEYS = {
   decisions: 'dayflow_decisions',
   procrastination: 'dayflow_procrastination',
   futureLetters: 'dayflow_future_letters',
+  xpEvents: 'dayflow_xp_events',
+  gamificationStats: 'dayflow_gamification_stats',
+  morningRituals: 'dayflow_morning_rituals',
 } as const;
 
 function load<T>(key: string, fallback: T): T {
@@ -267,6 +332,12 @@ export const saveProcrastinationEntries = (data: ProcrastinationEntry[]) => save
 
 export const getFutureLetters = () => load<FutureLetter[]>(KEYS.futureLetters, []);
 export const saveFutureLetters = (data: FutureLetter[]) => save(KEYS.futureLetters, data);
+
+export const getXPEvents = () => load<XPEvent[]>(KEYS.xpEvents, []);
+export const saveXPEvents = (data: XPEvent[]) => save(KEYS.xpEvents, data);
+
+export const getMorningRituals = () => load<MorningRitual[]>(KEYS.morningRituals, []);
+export const saveMorningRituals = (data: MorningRitual[]) => save(KEYS.morningRituals, data);
 
 // ===== UTILITIES =====
 
@@ -454,6 +525,147 @@ export function getProcrastinationPatterns(entries: ProcrastinationEntry[]): Rec
   });
   return patterns;
 }
+
+// ===== GAMIFICATION HELPERS =====
+
+const XP_TABLE: Record<string, number> = {
+  'routine': 10,
+  'task': 15,
+  'focus': 5, // per 25 min
+  'goal': 50,
+  'review': 30,
+  'energy': 5,
+  'decision': 20,
+  'letter': 25,
+  'morning-ritual': 20,
+  'streak-bonus': 0, // calculated dynamically
+};
+
+export function calculateLevel(totalXP: number): { level: number; currentLevelXP: number; nextLevelXP: number } {
+  // Each level requires progressively more XP: level N needs N*100 XP
+  let level = 1;
+  let xpNeeded = 100;
+  let remaining = totalXP;
+  while (remaining >= xpNeeded) {
+    remaining -= xpNeeded;
+    level++;
+    xpNeeded = level * 100;
+  }
+  return { level, currentLevelXP: remaining, nextLevelXP: xpNeeded };
+}
+
+export function awardXP(source: XPEvent['source'], description: string, customAmount?: number): XPEvent {
+  const events = getXPEvents();
+  const amount = customAmount ?? XP_TABLE[source] ?? 10;
+  const event: XPEvent = {
+    id: generateId(),
+    date: todayStr(),
+    source,
+    amount,
+    description,
+  };
+  events.push(event);
+  saveXPEvents(events);
+  return event;
+}
+
+export function getGamificationStats(): GamificationStats {
+  const events = getXPEvents();
+  const logs = getLogs();
+  const tasks = getTasks();
+  const sessions = getFocusSessions();
+  const goals = getGoals();
+  const reviews = getWeeklyReviews();
+  const decisions = getDecisions();
+  const letters = getFutureLetters();
+  const energyLogs = getEnergyLogs();
+  const rituals = getMorningRituals();
+  const routines = getRoutines();
+
+  const totalXP = events.reduce((s, e) => s + e.amount, 0);
+  const { level, currentLevelXP, nextLevelXP } = calculateLevel(totalXP);
+
+  // Calculate days active
+  const activeDays = new Set(events.map(e => e.date)).size;
+
+  // Calculate current streak (consecutive days with XP)
+  let currentStreak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0, 10);
+    if (events.some(e => e.date === ds)) {
+      currentStreak++;
+    } else if (i > 0) break;
+  }
+
+  // Longest streak
+  const sortedDates = [...new Set(events.map(e => e.date))].sort();
+  let longestStreak = 0;
+  let tempStreak = 1;
+  for (let i = 1; i < sortedDates.length; i++) {
+    const prev = new Date(sortedDates[i - 1]);
+    const curr = new Date(sortedDates[i]);
+    const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays === 1) {
+      tempStreak++;
+      longestStreak = Math.max(longestStreak, tempStreak);
+    } else {
+      tempStreak = 1;
+    }
+  }
+  longestStreak = Math.max(longestStreak, tempStreak, currentStreak);
+
+  const stats: GamificationStats = {
+    totalXP,
+    level,
+    currentLevelXP,
+    nextLevelXP,
+    totalRoutinesCompleted: logs.filter(l => l.completed).length,
+    totalTasksCompleted: tasks.filter(t => t.status === 'done').length,
+    totalFocusMinutes: sessions.filter(s => s.completed).reduce((s, f) => s + f.duration, 0),
+    totalGoalsCompleted: goals.filter(g => g.status === 'completed').length,
+    totalReviews: reviews.length,
+    totalDecisions: decisions.length,
+    totalLetters: letters.length,
+    totalEnergyLogs: energyLogs.length,
+    totalMorningRituals: rituals.length,
+    longestStreak,
+    currentStreak,
+    daysActive: activeDays,
+    unlockedAchievements: [],
+  };
+
+  // Check achievements
+  stats.unlockedAchievements = ACHIEVEMENTS.filter(a => a.condition(stats)).map(a => a.id);
+  return stats;
+}
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first-step', title: 'First Step', description: 'Earn your first XP', icon: '👣', category: 'milestone', condition: s => s.totalXP > 0, xpReward: 10 },
+  { id: 'century', title: 'Century', description: 'Reach 100 XP', icon: '💯', category: 'milestone', condition: s => s.totalXP >= 100, xpReward: 20 },
+  { id: 'thousand', title: 'XP Thousandaire', description: 'Reach 1,000 XP', icon: '🏆', category: 'milestone', condition: s => s.totalXP >= 1000, xpReward: 50 },
+  { id: 'level5', title: 'Rising Star', description: 'Reach level 5', icon: '⭐', category: 'milestone', condition: s => s.level >= 5, xpReward: 30 },
+  { id: 'level10', title: 'Veteran', description: 'Reach level 10', icon: '🌟', category: 'milestone', condition: s => s.level >= 10, xpReward: 100 },
+  { id: 'streak3', title: 'Hat Trick', description: '3-day streak', icon: '🔥', category: 'consistency', condition: s => s.currentStreak >= 3, xpReward: 15 },
+  { id: 'streak7', title: 'Week Warrior', description: '7-day streak', icon: '⚡', category: 'consistency', condition: s => s.currentStreak >= 7, xpReward: 30 },
+  { id: 'streak30', title: 'Iron Will', description: '30-day streak', icon: '💎', category: 'consistency', condition: s => s.currentStreak >= 30, xpReward: 100 },
+  { id: 'streak100', title: 'Unstoppable', description: '100-day streak', icon: '👑', category: 'consistency', condition: s => s.longestStreak >= 100, xpReward: 500 },
+  { id: 'tasks10', title: 'Task Slayer', description: 'Complete 10 tasks', icon: '⚔️', category: 'mastery', condition: s => s.totalTasksCompleted >= 10, xpReward: 20 },
+  { id: 'tasks50', title: 'Productivity Machine', description: 'Complete 50 tasks', icon: '🤖', category: 'mastery', condition: s => s.totalTasksCompleted >= 50, xpReward: 50 },
+  { id: 'focus120', title: 'Deep Diver', description: '120 minutes of focus', icon: '🤿', category: 'mastery', condition: s => s.totalFocusMinutes >= 120, xpReward: 25 },
+  { id: 'focus600', title: 'Flow State Master', description: '10 hours of focus', icon: '🧠', category: 'mastery', condition: s => s.totalFocusMinutes >= 600, xpReward: 75 },
+  { id: 'goal1', title: 'Goal Getter', description: 'Complete your first goal', icon: '🎯', category: 'mastery', condition: s => s.totalGoalsCompleted >= 1, xpReward: 50 },
+  { id: 'explorer-energy', title: 'Body Scientist', description: 'Log 10 energy readings', icon: '🔬', category: 'explorer', condition: s => s.totalEnergyLogs >= 10, xpReward: 20 },
+  { id: 'explorer-decision', title: 'Wise Judge', description: 'Record 5 decisions', icon: '⚖️', category: 'explorer', condition: s => s.totalDecisions >= 5, xpReward: 25 },
+  { id: 'explorer-letter', title: 'Time Traveler', description: 'Write 3 future letters', icon: '✉️', category: 'explorer', condition: s => s.totalLetters >= 3, xpReward: 30 },
+  { id: 'ritual5', title: 'Morning Person', description: 'Complete 5 morning rituals', icon: '🌅', category: 'consistency', condition: s => s.totalMorningRituals >= 5, xpReward: 25 },
+  { id: 'ritual30', title: 'Ritual Master', description: 'Complete 30 morning rituals', icon: '🏛️', category: 'consistency', condition: s => s.totalMorningRituals >= 30, xpReward: 100 },
+  { id: 'routines100', title: 'Habit Architect', description: 'Complete 100 routines', icon: '🏗️', category: 'mastery', condition: s => s.totalRoutinesCompleted >= 100, xpReward: 50 },
+  { id: 'days30', title: 'Monthly Devotee', description: 'Active for 30 days', icon: '📅', category: 'consistency', condition: s => s.daysActive >= 30, xpReward: 75 },
+  { id: 'allfeatures', title: 'Renaissance Soul', description: 'Use every feature at least once', icon: '🎨', category: 'explorer', condition: s => s.totalRoutinesCompleted > 0 && s.totalTasksCompleted > 0 && s.totalFocusMinutes > 0 && s.totalDecisions > 0 && s.totalLetters > 0 && s.totalEnergyLogs > 0 && s.totalMorningRituals > 0, xpReward: 100 },
+];
 
 export function getLifeBalanceScores(): Record<string, number> {
   const activities = getActivities();

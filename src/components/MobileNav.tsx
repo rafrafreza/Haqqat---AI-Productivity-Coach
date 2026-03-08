@@ -1,13 +1,13 @@
-import { LayoutDashboard, ListTodo, Timer, Battery, Radar } from "lucide-react";
+import { LayoutDashboard, Sun, ListTodo, Timer, Trophy } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const links = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
+  { to: "/ritual", icon: Sun, label: "Ritual" },
   { to: "/tasks", icon: ListTodo, label: "Tasks" },
   { to: "/focus", icon: Timer, label: "Focus" },
-  { to: "/energy", icon: Battery, label: "Energy" },
-  { to: "/balance", icon: Radar, label: "Balance" },
+  { to: "/xp", icon: Trophy, label: "Level Up" },
 ];
 
 export default function MobileNav() {
