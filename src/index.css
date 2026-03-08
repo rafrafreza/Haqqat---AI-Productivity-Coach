@@ -155,4 +155,7 @@
   .shadow-card {
     box-shadow: var(--shadow-card);
   }
+  .haqqat-logo {
+    filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1350%) hue-rotate(170deg) brightness(95%) contrast(101%);
+  }
 }
