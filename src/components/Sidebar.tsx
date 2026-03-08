@@ -1,9 +1,11 @@
-import { LayoutDashboard, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ListTodo, Timer, ClipboardCheck, Battery, Scale, Search, Mail, Radar, Trophy, Sun, LogOut, Crown } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ListTodo, Timer, ClipboardCheck, Battery, Scale, Search, Mail, Radar, Trophy, Sun, LogOut, Crown, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ProBadge, isProFeature } from "@/components/ProGate";
+import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const sections = [
   {
@@ -42,6 +44,9 @@ const sections = [
 export default function Sidebar() {
   const { signOut, user } = useAuth();
   const { isPro } = useSubscription();
+  const { profile } = useProfile();
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  const initials = displayName.charAt(0).toUpperCase();
 
   return (
     <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card min-h-screen p-6 overflow-y-auto">
@@ -87,15 +92,17 @@ export default function Sidebar() {
         )}
       </nav>
       <div className="mt-auto pt-6 border-t border-border">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-            {user?.email?.charAt(0).toUpperCase()}
-          </div>
+        <NavLink to="/settings" className="flex items-center gap-3 mb-3 p-1 rounded-lg hover:bg-secondary transition-colors">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+            <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
+            <p className="text-xs font-medium text-foreground truncate">{displayName}</p>
             <p className="text-[10px] text-muted-foreground">{isPro ? 'Pro' : 'Free'} Plan</p>
           </div>
-        </div>
+          <Settings size={14} className="text-muted-foreground" />
+        </NavLink>
         <button onClick={signOut} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full px-3 py-1.5">
           <LogOut size={14} />
           Sign Out
