@@ -57,9 +57,9 @@ export default function Analytics() {
           <h3 className="text-sm font-semibold text-foreground mb-4">Weekly Completions</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={weekData}>
-              <XAxis dataKey="day" tick={{ fill: 'hsl(40, 10%, 50%)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'hsl(40, 10%, 50%)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: 'hsl(30, 8%, 10%)', border: '1px solid hsl(30, 6%, 18%)', borderRadius: 8, color: 'hsl(40, 20%, 92%)' }} />
+              <XAxis dataKey="day" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, color: 'hsl(var(--foreground))' }} />
               <Bar dataKey="completed" fill="hsl(38, 92%, 55%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -74,7 +74,7 @@ export default function Analytics() {
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={3}>
                   {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: 'hsl(30, 8%, 10%)', border: '1px solid hsl(30, 6%, 18%)', borderRadius: 8, color: 'hsl(40, 20%, 92%)' }} />
+                <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, color: 'hsl(var(--foreground))' }} />
               </PieChart>
             </ResponsiveContainer>
           ) : (

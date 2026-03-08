@@ -85,10 +85,10 @@ export default function LifeBalance() {
         </h3>
         <ResponsiveContainer width="100%" height={350}>
           <RadarChart data={radarData}>
-            <PolarGrid stroke="hsl(30, 6%, 22%)" />
-            <PolarAngleAxis dataKey="dimension" tick={{ fill: 'hsl(40, 10%, 50%)', fontSize: 12 }} />
-            <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: 'hsl(40, 10%, 40%)', fontSize: 10 }} />
-            <Radar name="Balance" dataKey="score" stroke="hsl(38, 92%, 55%)" fill="hsl(38, 92%, 55%)" fillOpacity={0.2} strokeWidth={2} />
+            <PolarGrid stroke="hsl(var(--border))" />
+            <PolarAngleAxis dataKey="dimension" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+            <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+            <Radar name="Balance" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
           </RadarChart>
         </ResponsiveContainer>
       </div>

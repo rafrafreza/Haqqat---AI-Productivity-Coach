@@ -110,7 +110,7 @@ export default function Auth() {
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Full Name</label>
                 <div className="relative">
                   <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" required className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" required className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-input-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
               </div>
             )}
@@ -118,7 +118,7 @@ export default function Auth() {
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-input-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
               </div>
             </div>
             {mode !== "forgot" && (
@@ -126,7 +126,7 @@ export default function Auth() {
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Password</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-input bg-input-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                   <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>

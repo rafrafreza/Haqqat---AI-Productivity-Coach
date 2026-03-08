@@ -158,7 +158,7 @@ export default function Onboarding() {
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Your name"
                     autoFocus
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-full px-4 py-3 rounded-xl border border-input bg-input-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
               )}
