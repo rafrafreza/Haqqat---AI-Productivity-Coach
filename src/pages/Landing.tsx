@@ -42,6 +42,50 @@ function AnimatedSection({ children, className }: { children: React.ReactNode; c
   );
 }
 
+function HeroParticles() {
+  const particles = useMemo(() =>
+    Array.from({ length: 24 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 4 + 2,
+      duration: Math.random() * 8 + 10,
+      delay: Math.random() * 5,
+      driftX: (Math.random() - 0.5) * 60,
+      driftY: (Math.random() - 0.5) * 60,
+    })),
+  []);
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden>
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full bg-primary"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size,
+          }}
+          animate={{
+            x: [0, p.driftX, 0],
+            y: [0, p.driftY, 0],
+            opacity: [0, 0.25, 0.15, 0],
+            scale: [0.5, 1, 0.5],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            delay: p.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function Landing() {
   const navigate = useNavigate();
 
