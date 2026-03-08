@@ -237,7 +237,7 @@ export default function FutureLetters() {
 
                       {!l.reflection ? (
                         <div className="space-y-2">
-                          <Textarea placeholder="Reflect: How does this letter make you feel? Were you right about your predictions? What's changed?" value={reflection} onChange={e => setReflection(e.target.value)} className="bg-secondary border-border" rows={3} />
+                          <Textarea placeholder="Reflect: How does this letter make you feel? Were you right about your predictions? What's changed?" value={reflection} onChange={e => setReflection(e.target.value)} rows={3} />
                           <Button onClick={() => saveReflection(l.id)} size="sm" variant="outline">Save Reflection</Button>
                         </div>
                       ) : (
