@@ -121,7 +121,7 @@ export default function Onboarding() {
                     <Zap size={32} className="text-primary" />
                   </motion.div>
                   <h1 className="text-2xl font-display text-foreground mb-3">
-                    Welcome to Haqqa
+                    Welcome to Haqqat
                   </h1>
                   <p className="text-muted-foreground mb-2">
                     Let's set up your productivity workspace in just a few steps.
