@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Battery, BatteryLow, BatteryMedium, BatteryFull, Zap, Brain, Coffee, Users, Inbox, Plus, Info } from "lucide-react";
 import { getEnergyLogs, saveEnergyLogs, calculateBiologicalPrimeTime, generateId, todayStr, type EnergyLog, type BiologicalPrimeTime } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -31,6 +33,7 @@ export default function EnergyMap() {
   const [note, setNote] = useState("");
   const today = todayStr();
 
+  const { grantXP } = useXPAward();
   useEffect(() => { setLogs(getEnergyLogs()); }, []);
 
   const update = (l: EnergyLog[]) => { setLogs(l); saveEnergyLogs(l); };
@@ -43,6 +46,8 @@ export default function EnergyMap() {
       note: note.trim() || undefined,
     };
     update([log, ...logs]);
+    const result = grantXP('energy', 'Logged energy level');
+    notifyXP(result);
     setActivity(""); setNote(""); setEnergy(7); setOpen(false);
   };
 
@@ -52,6 +57,8 @@ export default function EnergyMap() {
       id: generateId(), date: today, hour: now.getHours(), level,
     };
     update([log, ...logs]);
+    const result = grantXP('energy', 'Quick energy log');
+    notifyXP(result);
   };
 
   const primeTime = calculateBiologicalPrimeTime(logs);

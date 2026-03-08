@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Trash2, TrendingUp, AlertTriangle, Brain, Zap } from "lucide-react";
 import { getProcrastinationEntries, saveProcrastinationEntries, getProcrastinationPatterns, generateId, todayStr, type ProcrastinationEntry } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Star, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight } from "lucide-react";
 import { getWeeklyReviews, saveWeeklyReviews, generateId, getWeekStart, calculateDailyProductivityScore, type WeeklyReview } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +26,7 @@ export default function Reviews() {
   const [priorities, setPriorities] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
 
+  const { grantXP } = useXPAward();
   useEffect(() => { setReviews(getWeeklyReviews()); }, []);
 
   const update = (r: WeeklyReview[]) => { setReviews(r); saveWeeklyReviews(r); };
@@ -39,8 +42,11 @@ export default function Reviews() {
       nextWeekPriorities: priorities, notes: notes.trim() || undefined,
     };
     update([review, ...reviews]);
+    const result = grantXP('review', 'Weekly review completed');
+    notifyXP(result);
     setProductivityScore(7); setEnergyScore(7); setFocusScore(7);
     setWins([]); setImprovements([]); setPriorities([]); setNotes("");
+    setOpen(false);
     setOpen(false);
   };
 

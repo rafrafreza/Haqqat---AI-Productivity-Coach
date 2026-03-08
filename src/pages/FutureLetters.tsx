@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Mail, MailOpen, Lock, Unlock, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { getFutureLetters, saveFutureLetters, generateId, todayStr, type FutureLetter, type Prediction } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +25,7 @@ export default function FutureLetters() {
 
   useEffect(() => { setLetters(getFutureLetters()); }, []);
 
+  const { grantXP } = useXPAward();
   const update = (l: FutureLetter[]) => { setLetters(l); saveFutureLetters(l); };
 
   const addLetter = () => {
@@ -34,6 +37,8 @@ export default function FutureLetters() {
       isRevealed: false,
     };
     update([letter, ...letters]);
+    const result = grantXP('letter', 'Wrote a future letter');
+    notifyXP(result);
     setSubject(""); setContent(""); setDeliveryDate(""); setMood("hopeful");
     setPredictions([]); setPredictionText(""); setOpen(false);
   };
