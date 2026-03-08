@@ -77,7 +77,11 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Productivity Score */}
+      {/* XP & Streak Widget */}
+      <div className="mb-6">
+        <DashboardXPWidget />
+      </div>
+
       <div className="bg-card border border-border rounded-xl p-6 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
