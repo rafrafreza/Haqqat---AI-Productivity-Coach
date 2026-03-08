@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Zap, Star, Trophy } from "lucide-react";
 import type { XPResult } from "@/hooks/useXP";
+import { triggerConfetti } from "@/components/Confetti";
 
 interface XPToast {
   id: string;
@@ -98,6 +99,7 @@ export default function XPNotificationLayer() {
       if (result.leveledUp) {
         setTimeout(() => {
           playSound('level-up');
+          triggerConfetti();
           addToast({ type: 'level-up', level: result.level });
         }, 600);
       }

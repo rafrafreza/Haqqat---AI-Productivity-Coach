@@ -667,6 +667,129 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'allfeatures', title: 'Renaissance Soul', description: 'Use every feature at least once', icon: '🎨', category: 'explorer', condition: s => s.totalRoutinesCompleted > 0 && s.totalTasksCompleted > 0 && s.totalFocusMinutes > 0 && s.totalDecisions > 0 && s.totalLetters > 0 && s.totalEnergyLogs > 0 && s.totalMorningRituals > 0, xpReward: 100 },
 ];
 
+// ===== WEEKLY XP CHART DATA =====
+
+export function getWeeklyXPData(): { day: string; xp: number; date: string }[] {
+  const events = getXPEvents();
+  const data: { day: string; xp: number; date: string }[] = [];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0, 10);
+    const dayXP = events.filter(e => e.date === ds).reduce((s, e) => s + e.amount, 0);
+    data.push({ day: dayNames[d.getDay()], xp: dayXP, date: ds });
+  }
+  return data;
+}
+
+// ===== DAILY CHALLENGES =====
+
+export interface DailyChallenge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  xpReward: number;
+  conditions: { source: XPEvent['source']; count: number }[];
+}
+
+const ALL_CHALLENGES: DailyChallenge[] = [
+  {
+    id: 'triple-threat',
+    title: 'Triple Threat',
+    description: 'Complete 3 routines + 1 focus session + log energy',
+    icon: '🔥',
+    xpReward: 50,
+    conditions: [{ source: 'routine', count: 3 }, { source: 'focus', count: 1 }, { source: 'energy', count: 1 }],
+  },
+  {
+    id: 'deep-worker',
+    title: 'Deep Worker',
+    description: 'Complete 2 focus sessions + finish 2 tasks',
+    icon: '🧠',
+    xpReward: 40,
+    conditions: [{ source: 'focus', count: 2 }, { source: 'task', count: 2 }],
+  },
+  {
+    id: 'morning-champion',
+    title: 'Morning Champion',
+    description: 'Complete morning ritual + 2 routines + 1 task',
+    icon: '🌅',
+    xpReward: 45,
+    conditions: [{ source: 'morning-ritual', count: 1 }, { source: 'routine', count: 2 }, { source: 'task', count: 1 }],
+  },
+  {
+    id: 'full-spectrum',
+    title: 'Full Spectrum',
+    description: 'Log energy + record a decision + complete 1 task',
+    icon: '🌈',
+    xpReward: 55,
+    conditions: [{ source: 'energy', count: 1 }, { source: 'decision', count: 1 }, { source: 'task', count: 1 }],
+  },
+  {
+    id: 'productivity-blitz',
+    title: 'Productivity Blitz',
+    description: 'Complete 5 routines + 3 tasks',
+    icon: '⚡',
+    xpReward: 60,
+    conditions: [{ source: 'routine', count: 5 }, { source: 'task', count: 3 }],
+  },
+  {
+    id: 'mindful-day',
+    title: 'Mindful Day',
+    description: 'Morning ritual + log energy + write a review',
+    icon: '🧘',
+    xpReward: 50,
+    conditions: [{ source: 'morning-ritual', count: 1 }, { source: 'energy', count: 1 }, { source: 'review', count: 1 }],
+  },
+];
+
+export function getDailyChallenges(): { challenge: DailyChallenge; progress: { source: string; current: number; required: number }[]; completed: boolean; claimed: boolean }[] {
+  const today = todayStr();
+  const events = getXPEvents().filter(e => e.date === today);
+  
+  // Use date as seed to pick 3 challenges deterministically
+  const seed = today.split('-').join('');
+  const seedNum = parseInt(seed) % ALL_CHALLENGES.length;
+  const picked: DailyChallenge[] = [];
+  for (let i = 0; i < 3; i++) {
+    picked.push(ALL_CHALLENGES[(seedNum + i) % ALL_CHALLENGES.length]);
+  }
+  
+  // Check if already claimed
+  const claimedKey = `dayflow_challenges_claimed_${today}`;
+  const claimed: string[] = load(claimedKey, []);
+  
+  return picked.map(challenge => {
+    const progress = challenge.conditions.map(cond => ({
+      source: cond.source,
+      current: events.filter(e => e.source === cond.source).length,
+      required: cond.count,
+    }));
+    const completed = progress.every(p => p.current >= p.required);
+    return { challenge, progress, completed, claimed: claimed.includes(challenge.id) };
+  });
+}
+
+export function claimDailyChallenge(challengeId: string): XPEvent | null {
+  const today = todayStr();
+  const claimedKey = `dayflow_challenges_claimed_${today}`;
+  const claimed: string[] = load(claimedKey, []);
+  
+  if (claimed.includes(challengeId)) return null;
+  
+  const challenges = getDailyChallenges();
+  const found = challenges.find(c => c.challenge.id === challengeId);
+  if (!found || !found.completed) return null;
+  
+  claimed.push(challengeId);
+  save(claimedKey, claimed);
+  
+  return awardXP('streak-bonus', `Daily Challenge: ${found.challenge.title}`, found.challenge.xpReward);
+}
+
 export function getLifeBalanceScores(): Record<string, number> {
   const activities = getActivities();
   const tasks = getTasks();

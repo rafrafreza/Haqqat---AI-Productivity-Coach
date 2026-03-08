@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { Trophy, Star, Flame, Zap, Lock, Unlock, TrendingUp, Award } from "lucide-react";
-import { getGamificationStats, ACHIEVEMENTS, type GamificationStats, type Achievement } from "@/lib/store";
+import { Trophy, Star, Flame, Zap, Lock, Unlock, TrendingUp, Award, Gift, CheckCircle } from "lucide-react";
+import { getGamificationStats, getWeeklyXPData, getDailyChallenges, claimDailyChallenge, ACHIEVEMENTS, type GamificationStats, type Achievement } from "@/lib/store";
 import { Progress } from "@/components/ui/progress";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 
 const LEVEL_TITLES: Record<number, string> = {
   1: 'Beginner', 2: 'Apprentice', 3: 'Novice', 4: 'Practitioner', 5: 'Adept',
@@ -23,16 +26,42 @@ const categoryColors: Record<string, string> = {
 
 export default function Gamification() {
   const [stats, setStats] = useState<GamificationStats | null>(null);
+  const [weeklyData, setWeeklyData] = useState<{ day: string; xp: number; date: string }[]>([]);
+  const [challenges, setChallenges] = useState<ReturnType<typeof getDailyChallenges>>([]);
+  const { grantXP } = useXPAward();
 
-  useEffect(() => {
+  const refresh = () => {
     setStats(getGamificationStats());
-  }, []);
+    setWeeklyData(getWeeklyXPData());
+    setChallenges(getDailyChallenges());
+  };
+
+  useEffect(() => { refresh(); }, []);
+
+  const handleClaim = (challengeId: string) => {
+    const event = claimDailyChallenge(challengeId);
+    if (event) {
+      // Use the XP notification system
+      const result = {
+        event,
+        totalXP: 0,
+        level: 0,
+        previousLevel: 0,
+        leveledUp: false,
+        newAchievements: [],
+      };
+      notifyXP(result);
+      refresh();
+    }
+  };
 
   if (!stats) return null;
 
   const levelProgress = stats.nextLevelXP > 0 ? (stats.currentLevelXP / stats.nextLevelXP) * 100 : 100;
   const unlocked = ACHIEVEMENTS.filter(a => stats.unlockedAchievements.includes(a.id));
   const locked = ACHIEVEMENTS.filter(a => !stats.unlockedAchievements.includes(a.id));
+  const maxXP = Math.max(...weeklyData.map(d => d.xp), 1);
+  const todayDate = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">
@@ -76,6 +105,91 @@ export default function Gamification() {
         <StatBox icon={<TrendingUp size={18} />} label="Longest Streak" value={`${stats.longestStreak}d`} />
         <StatBox icon={<Zap size={18} />} label="Days Active" value={String(stats.daysActive)} />
         <StatBox icon={<Trophy size={18} />} label="Achievements" value={`${unlocked.length}/${ACHIEVEMENTS.length}`} />
+      </div>
+
+      {/* Weekly XP Chart */}
+      <div className="bg-card border border-border rounded-xl p-6 mb-8">
+        <h3 className="text-lg font-display text-foreground mb-4 flex items-center gap-2">
+          <TrendingUp size={18} className="text-primary" /> Weekly XP
+        </h3>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={weeklyData} barCategoryGap="20%">
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={35} />
+              <Tooltip
+                cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
+                contentStyle={{
+                  background: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                }}
+                formatter={(value: number) => [`${value} XP`, 'Earned']}
+              />
+              <Bar dataKey="xp" radius={[6, 6, 0, 0]}>
+                {weeklyData.map((entry, index) => (
+                  <Cell
+                    key={index}
+                    fill={entry.date === todayDate ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.3)'}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Daily Challenges */}
+      <div className="bg-card border border-border rounded-xl p-6 mb-8">
+        <h3 className="text-lg font-display text-foreground mb-4 flex items-center gap-2">
+          <Gift size={18} className="text-primary" /> Today's Challenges
+        </h3>
+        <div className="space-y-3">
+          {challenges.map(({ challenge, progress, completed, claimed }) => (
+            <div
+              key={challenge.id}
+              className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                claimed ? 'border-primary/20 bg-primary/5 opacity-70' :
+                completed ? 'border-primary/40 bg-primary/10' :
+                'border-border bg-secondary/20'
+              }`}
+            >
+              <span className="text-2xl">{challenge.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-foreground">{challenge.title}</p>
+                <p className="text-xs text-muted-foreground">{challenge.description}</p>
+                <div className="flex gap-2 mt-2">
+                  {progress.map((p, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <div className={`h-1.5 w-8 rounded-full ${p.current >= p.required ? 'bg-primary' : 'bg-muted'}`} />
+                      <span className="text-[10px] text-muted-foreground">
+                        {Math.min(p.current, p.required)}/{p.required} {p.source}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                {claimed ? (
+                  <div className="flex items-center gap-1 text-primary">
+                    <CheckCircle size={14} />
+                    <span className="text-xs font-bold">Claimed</span>
+                  </div>
+                ) : completed ? (
+                  <button
+                    onClick={() => handleClaim(challenge.id)}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-bounce-gentle"
+                  >
+                    +{challenge.xpReward} XP
+                  </button>
+                ) : (
+                  <span className="text-xs font-bold text-muted-foreground">+{challenge.xpReward} XP</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Activity Breakdown */}
