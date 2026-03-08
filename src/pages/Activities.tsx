@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { getActivities, saveActivities, todayStr, generateId, type Activity } from "@/lib/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const actCategories = ["Work", "Learning", "Health", "Personal", "Social", "Creative", "Other"];
 
-export default function Activities() {
+const Activities = React.forwardRef<HTMLDivElement>(function Activities(_props, ref) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -48,7 +48,7 @@ export default function Activities() {
   const totalMins = todayActivities.reduce((sum, a) => sum + (a.duration || 0), 0);
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto">
+    <div ref={ref} className="p-6 md:p-10 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-display text-foreground">Activity Log</h1>
@@ -114,7 +114,9 @@ export default function Activities() {
       )}
     </div>
   );
-}
+});
+Activities.displayName = "Activities";
+export default Activities;
 
 function ActivityCard({ activity, onDelete }: { activity: Activity; onDelete: (id: string) => void }) {
   return (
