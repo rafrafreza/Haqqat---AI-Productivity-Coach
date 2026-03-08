@@ -15,6 +15,7 @@ const ENERGY_LABELS: Record<string, { label: string; color: string; icon: string
 };
 
 export default function MorningRitualPage() {
+  const { grantXP } = useXPAward();
   const [rituals, setRituals] = useState<MorningRitual[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [primeTime, setPrimeTime] = useState<BiologicalPrimeTime[]>([]);
