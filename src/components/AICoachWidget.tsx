@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Bot, Sparkles, RefreshCw, X, Send, Lock, Crown } from "lucide-react";
+import { Bot, Sparkles, RefreshCw, X, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { Link } from "react-router-dom";
+
 import {
   getRoutines, getLogs, getTasks, getFocusSessions, getGoals,
   getEnergyLogs, getDecisions, getProcrastinationEntries,
@@ -9,7 +9,7 @@ import {
   getOverdueTasks, getDueSoonTasks, getTodayFocusMinutes,
   getGamificationStats, getXPEvents
 } from "@/lib/store";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -132,7 +132,7 @@ async function streamFromCoach(
   return accumulated;
 }
 
-const FREE_TEASER_LINES = 8;
+
 
 export default function AICoachWidget() {
   const [open, setOpen] = useState(false);
@@ -140,8 +140,6 @@ export default function AICoachWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [input, setInput] = useState("");
-  const [teaserContent, setTeaserContent] = useState("");
-  const { isPro } = useSubscription();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -163,31 +161,22 @@ export default function AICoachWidget() {
         { userData, mode: "initial" },
         (accumulated) => {
           finalContent = accumulated;
-          if (!isPro) {
-            // Show teaser: first few lines
-            const lines = accumulated.split("\n");
-            setTeaserContent(lines.slice(0, FREE_TEASER_LINES).join("\n"));
-          }
           setMessages([{ role: "assistant", content: accumulated }]);
         },
         (msg) => setError(msg),
       );
       if (finalContent) {
         setMessages([{ role: "assistant", content: finalContent }]);
-        if (!isPro) {
-          const lines = finalContent.split("\n");
-          setTeaserContent(lines.slice(0, FREE_TEASER_LINES).join("\n"));
-        }
       }
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
-  }, [isPro]);
+  }, []);
 
   const sendMessage = useCallback(async () => {
-    if (!input.trim() || loading || !isPro) return;
+    if (!input.trim() || loading) return;
 
     const userMsg: Message = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMsg];
@@ -220,7 +209,7 @@ export default function AICoachWidget() {
       setLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, loading, isPro, messages]);
+  }, [input, loading, messages]);
 
   // Floating button
   if (!open) {
@@ -236,7 +225,7 @@ export default function AICoachWidget() {
     );
   }
 
-  const showBlur = !isPro && messages.length > 0;
+  
 
   return (
     <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[80vh] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
@@ -245,13 +234,6 @@ export default function AICoachWidget() {
         <div className="flex items-center gap-2">
           <Bot size={18} className="text-primary" />
           <span className="font-semibold text-sm text-foreground">AI Coach</span>
-          {isPro ? (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium flex items-center gap-0.5">
-              <Crown size={8} /> PRO
-            </span>
-          ) : (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground font-medium">PREVIEW</span>
-          )}
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -296,34 +278,9 @@ export default function AICoachWidget() {
                 : "bg-secondary/10 border border-border rounded-bl-md"
             }`}>
               {msg.role === "assistant" ? (
-                showBlur && i === 0 ? (
-                  // Teaser for free users — show partial with blur
-                  <div className="relative">
-                    <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-p:text-foreground/90 prose-li:text-foreground/90">
-                      <ReactMarkdown>{teaserContent}</ReactMarkdown>
-                    </div>
-                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-card via-card/95 to-transparent" />
-                    <div className="relative z-10 flex flex-col items-center gap-3 pt-4 pb-2">
-                      <Lock size={20} className="text-primary" />
-                      <p className="text-sm font-medium text-foreground text-center">
-                        Unlock full coaching & chat
-                      </p>
-                      <p className="text-xs text-muted-foreground text-center max-w-[200px]">
-                        Get personalized tips, follow-up Q&A, and unlimited sessions with Pro
-                      </p>
-                      <Link
-                        to="/pricing"
-                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-                      >
-                        Upgrade to Pro — $7.99/mo
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-p:text-foreground/90 prose-li:text-foreground/90 prose-a:text-primary">
+                <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-p:text-foreground/90 prose-li:text-foreground/90 prose-a:text-primary">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
-                )
               ) : (
                 <p className="text-sm">{msg.content}</p>
               )}
@@ -344,39 +301,29 @@ export default function AICoachWidget() {
         )}
       </div>
 
-      {/* Chat input — Pro only */}
+      {/* Chat input */}
       <div className="shrink-0 border-t border-border p-3">
-        {isPro ? (
-          <form
-            onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
-            className="flex items-center gap-2"
+        <form
+          onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
+          className="flex items-center gap-2"
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask your coach anything..."
+            disabled={loading}
+            className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            className="p-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask your coach anything..."
-              disabled={loading}
-              className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="p-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              <Send size={16} />
-            </button>
-          </form>
-        ) : (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Lock size={14} />
-            <span className="text-xs">Chat mode is a Pro feature</span>
-            <Link to="/pricing" className="text-xs text-primary font-medium hover:underline ml-auto">
-              Upgrade →
-            </Link>
-          </div>
-        )}
+            <Send size={16} />
+          </button>
+        </form>
       </div>
     </div>
   );

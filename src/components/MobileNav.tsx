@@ -1,10 +1,8 @@
-import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar, LogOut, Crown, Settings } from "lucide-react";
+import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar, LogOut, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/contexts/SubscriptionContext";
-import { ProBadge, isProFeature } from "@/components/ProGate";
 import { useProfile } from "@/hooks/useProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -55,7 +53,7 @@ export default function MobileNav() {
   const [dragging, setDragging] = useState(false);
   const startY = useRef(0);
   const { signOut, user } = useAuth();
-  const { isPro } = useSubscription();
+  
   const { profile } = useProfile();
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const initials = displayName.charAt(0).toUpperCase();
@@ -103,9 +101,7 @@ export default function MobileNav() {
               <div key={section.title} className="mb-4">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2 px-3">{section.title}</p>
                 <div className="flex flex-col gap-0.5">
-                  {section.links.map(({ to, icon: Icon, label }) => {
-                    const pro = isProFeature(to) && !isPro;
-                    return (
+                  {section.links.map(({ to, icon: Icon, label }) => (
                       <NavLink
                         key={to}
                         to={to}
@@ -119,19 +115,11 @@ export default function MobileNav() {
                       >
                         <Icon size={16} />
                         <span className="flex-1">{label}</span>
-                        {pro && <ProBadge />}
                       </NavLink>
-                    );
-                  })}
+                  ))}
                 </div>
               </div>
             ))}
-            {!isPro && (
-              <NavLink to="/pricing" onClick={() => setOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4">
-                <Crown size={16} />
-                Upgrade to Pro
-              </NavLink>
-            )}
           </nav>
           <div className="absolute bottom-20 left-0 right-0 px-5 border-t border-border pt-3">
             <div className="flex items-center gap-3">
@@ -145,7 +133,7 @@ export default function MobileNav() {
                 <NavLink to="/settings" onClick={() => setOpen(false)}>
                   <p className="text-xs font-medium text-foreground truncate">{displayName}</p>
                 </NavLink>
-                <p className="text-[10px] text-muted-foreground">{isPro ? 'Pro' : 'Free'}</p>
+                <p className="text-[10px] text-muted-foreground">Free</p>
               </div>
               <button onClick={signOut} className="p-2 text-muted-foreground hover:text-foreground">
                 <LogOut size={16} />
