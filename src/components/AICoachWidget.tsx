@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
-import { Bot, Sparkles, RefreshCw, X } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Bot, Sparkles, RefreshCw, X, Send, Lock, Crown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { Link } from "react-router-dom";
 import {
   getRoutines, getLogs, getTasks, getFocusSessions, getGoals,
   getEnergyLogs, getDecisions, getProcrastinationEntries,
@@ -9,6 +10,8 @@ import {
   getGamificationStats, getXPEvents
 } from "@/lib/store";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+
+type Message = { role: "user" | "assistant"; content: string };
 
 function gatherUserData() {
   const today = todayStr();
@@ -68,73 +71,112 @@ function gatherUserData() {
   };
 }
 
+async function streamFromCoach(
+  body: Record<string, unknown>,
+  onDelta: (text: string) => void,
+  onError: (msg: string) => void,
+) {
+  const resp = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (!resp.ok) {
+    if (resp.status === 429) { onError("Too many requests — please wait a moment."); return; }
+    if (resp.status === 402) { onError("AI credits exhausted. Please upgrade."); return; }
+    throw new Error("Failed to get coaching tips");
+  }
+  if (!resp.body) throw new Error("No response body");
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let textBuffer = "";
+  let accumulated = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    textBuffer += decoder.decode(value, { stream: true });
+
+    let newlineIndex: number;
+    while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+      let line = textBuffer.slice(0, newlineIndex);
+      textBuffer = textBuffer.slice(newlineIndex + 1);
+      if (line.endsWith("\r")) line = line.slice(0, -1);
+      if (line.startsWith(":") || line.trim() === "") continue;
+      if (!line.startsWith("data: ")) continue;
+
+      const jsonStr = line.slice(6).trim();
+      if (jsonStr === "[DONE]") return accumulated;
+
+      try {
+        const parsed = JSON.parse(jsonStr);
+        const content = parsed.choices?.[0]?.delta?.content;
+        if (content) {
+          accumulated += content;
+          onDelta(accumulated);
+        }
+      } catch {
+        textBuffer = line + "\n" + textBuffer;
+        break;
+      }
+    }
+  }
+  return accumulated;
+}
+
+const FREE_TEASER_LINES = 8;
+
 export default function AICoachWidget() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
+  const [input, setInput] = useState("");
+  const [teaserContent, setTeaserContent] = useState("");
   const { isPro } = useSubscription();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const getCoaching = useCallback(async () => {
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const getInitialCoaching = useCallback(async () => {
     setLoading(true);
-    setResponse("");
     setError("");
-
+    setMessages([]);
     const userData = gatherUserData();
 
     try {
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ userData }),
-        }
-      );
-
-      if (!resp.ok) {
-        if (resp.status === 429) { setError("Too many requests — please wait a moment."); setLoading(false); return; }
-        if (resp.status === 402) { setError("AI credits exhausted. Please upgrade."); setLoading(false); return; }
-        throw new Error("Failed to get coaching tips");
-      }
-
-      if (!resp.body) throw new Error("No response body");
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let accumulated = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              accumulated += content;
-              setResponse(accumulated);
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
+      let finalContent = "";
+      await streamFromCoach(
+        { userData, mode: "initial" },
+        (accumulated) => {
+          finalContent = accumulated;
+          if (!isPro) {
+            // Show teaser: first few lines
+            const lines = accumulated.split("\n");
+            setTeaserContent(lines.slice(0, FREE_TEASER_LINES).join("\n"));
           }
+          setMessages([{ role: "assistant", content: accumulated }]);
+        },
+        (msg) => setError(msg),
+      );
+      if (finalContent) {
+        setMessages([{ role: "assistant", content: finalContent }]);
+        if (!isPro) {
+          const lines = finalContent.split("\n");
+          setTeaserContent(lines.slice(0, FREE_TEASER_LINES).join("\n"));
         }
       }
     } catch (err: any) {
@@ -142,12 +184,49 @@ export default function AICoachWidget() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isPro]);
 
+  const sendMessage = useCallback(async () => {
+    if (!input.trim() || loading || !isPro) return;
+
+    const userMsg: Message = { role: "user", content: input.trim() };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+    setError("");
+
+    const userData = gatherUserData();
+
+    try {
+      let assistantContent = "";
+      await streamFromCoach(
+        { userData, messages: newMessages, mode: "chat" },
+        (accumulated) => {
+          assistantContent = accumulated;
+          setMessages(prev => {
+            const last = prev[prev.length - 1];
+            if (last?.role === "assistant" && prev.length > newMessages.length) {
+              return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: accumulated } : m);
+            }
+            return [...newMessages, { role: "assistant", content: accumulated }];
+          });
+        },
+        (msg) => setError(msg),
+      );
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+      inputRef.current?.focus();
+    }
+  }, [input, loading, isPro, messages]);
+
+  // Floating button
   if (!open) {
     return (
       <button
-        onClick={() => { setOpen(true); if (!response && !loading) getCoaching(); }}
+        onClick={() => { setOpen(true); if (messages.length === 0 && !loading) getInitialCoaching(); }}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all group"
       >
         <Bot size={20} />
@@ -157,21 +236,29 @@ export default function AICoachWidget() {
     );
   }
 
+  const showBlur = !isPro && messages.length > 0;
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] max-h-[70vh] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
+    <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[80vh] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-primary/5">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-primary/5 shrink-0">
         <div className="flex items-center gap-2">
           <Bot size={18} className="text-primary" />
-          <span className="font-semibold text-sm text-foreground">AI Productivity Coach</span>
-          {!isPro && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">FREE</span>}
+          <span className="font-semibold text-sm text-foreground">AI Coach</span>
+          {isPro ? (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium flex items-center gap-0.5">
+              <Crown size={8} /> PRO
+            </span>
+          ) : (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/30 text-muted-foreground font-medium">PREVIEW</span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={getCoaching}
+            onClick={() => { setMessages([]); getInitialCoaching(); }}
             disabled={loading}
             className="p-1.5 rounded-lg hover:bg-secondary/20 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-            title="Refresh tips"
+            title="New session"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
@@ -184,9 +271,9 @@ export default function AICoachWidget() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {loading && !response && (
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 relative">
+        {loading && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Bot size={20} className="text-primary animate-pulse" />
@@ -201,24 +288,96 @@ export default function AICoachWidget() {
           </div>
         )}
 
-        {response && (
-          <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-p:text-foreground/90 prose-li:text-foreground/90 prose-a:text-primary">
-            <ReactMarkdown>{response}</ReactMarkdown>
+        {messages.map((msg, i) => (
+          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[90%] rounded-2xl px-4 py-3 ${
+              msg.role === "user"
+                ? "bg-primary text-primary-foreground rounded-br-md"
+                : "bg-secondary/10 border border-border rounded-bl-md"
+            }`}>
+              {msg.role === "assistant" ? (
+                showBlur && i === 0 ? (
+                  // Teaser for free users — show partial with blur
+                  <div className="relative">
+                    <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-p:text-foreground/90 prose-li:text-foreground/90">
+                      <ReactMarkdown>{teaserContent}</ReactMarkdown>
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-card via-card/95 to-transparent" />
+                    <div className="relative z-10 flex flex-col items-center gap-3 pt-4 pb-2">
+                      <Lock size={20} className="text-primary" />
+                      <p className="text-sm font-medium text-foreground text-center">
+                        Unlock full coaching & chat
+                      </p>
+                      <p className="text-xs text-muted-foreground text-center max-w-[200px]">
+                        Get personalized tips, follow-up Q&A, and unlimited sessions with Pro
+                      </p>
+                      <Link
+                        to="/pricing"
+                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Upgrade to Pro — $7.99/mo
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-p:text-foreground/90 prose-li:text-foreground/90 prose-a:text-primary">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
+                )
+              ) : (
+                <p className="text-sm">{msg.content}</p>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {loading && messages.length > 0 && messages[messages.length - 1]?.role === "user" && (
+          <div className="flex justify-start">
+            <div className="bg-secondary/10 border border-border rounded-2xl rounded-bl-md px-4 py-3">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Footer */}
-      {response && !loading && (
-        <div className="px-4 py-2 border-t border-border">
-          <button
-            onClick={getCoaching}
-            className="w-full py-2 rounded-xl text-xs font-medium text-primary hover:bg-primary/5 transition-colors"
+      {/* Chat input — Pro only */}
+      <div className="shrink-0 border-t border-border p-3">
+        {isPro ? (
+          <form
+            onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
+            className="flex items-center gap-2"
           >
-            🔄 Get fresh tips
-          </button>
-        </div>
-      )}
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask your coach anything..."
+              disabled={loading}
+              className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="p-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <Send size={16} />
+            </button>
+          </form>
+        ) : (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Lock size={14} />
+            <span className="text-xs">Chat mode is a Pro feature</span>
+            <Link to="/pricing" className="text-xs text-primary font-medium hover:underline ml-auto">
+              Upgrade →
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
