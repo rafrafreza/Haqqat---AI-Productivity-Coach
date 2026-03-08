@@ -1,10 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const DAILY_LIMIT = 10;
 
 const systemPrompt = `You are Haqqat's AI Productivity Coach — a warm, insightful, and action-oriented mentor. You analyze the user's real productivity data and provide personalized, specific advice.
 
@@ -30,6 +33,63 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
+    // Extract user from auth header
+    const authHeader = req.headers.get("Authorization");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Create client with user's JWT to get their identity
+    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader || "" } },
+    });
+
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Use service role client for usage tracking (bypasses RLS)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Check current usage
+    const { data: usageRow } = await supabaseAdmin
+      .from("ai_coach_usage")
+      .select("message_count")
+      .eq("user_id", user.id)
+      .eq("usage_date", today)
+      .maybeSingle();
+
+    const currentCount = usageRow?.message_count ?? 0;
+    const remaining = DAILY_LIMIT - currentCount;
+
+    if (remaining <= 0) {
+      return new Response(
+        JSON.stringify({ error: "Daily AI Coach limit reached (10 messages/day). Come back tomorrow! 🌅", remaining: 0 }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Increment usage
+    if (usageRow) {
+      await supabaseAdmin
+        .from("ai_coach_usage")
+        .update({ message_count: currentCount + 1, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .eq("usage_date", today);
+    } else {
+      await supabaseAdmin
+        .from("ai_coach_usage")
+        .insert({ user_id: user.id, usage_date: today, message_count: 1 });
+    }
+
+    const newRemaining = remaining - 1;
+
+    // Process AI request
     const { userData, messages: chatMessages, mode } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -88,7 +148,11 @@ serve(async (req) => {
     }
 
     return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "X-Remaining-Messages": String(newRemaining),
+      },
     });
   } catch (e) {
     console.error("coach error:", e);
