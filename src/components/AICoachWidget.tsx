@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Bot, Sparkles, RefreshCw, X, Send, ShieldAlert } from "lucide-react";
+import { Bot, Sparkles, RefreshCw, X, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 import {
@@ -9,31 +9,6 @@ import {
   getOverdueTasks, getDueSoonTasks, getTodayFocusMinutes,
   getGamificationStats, getXPEvents
 } from "@/lib/store";
-
-const DAILY_LIMIT = 10;
-const LIMIT_KEY = "haqqat_ai_coach_usage";
-
-function getDailyUsage(): { date: string; count: number } {
-  try {
-    const raw = localStorage.getItem(LIMIT_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.date === todayStr()) return parsed;
-    }
-  } catch {}
-  return { date: todayStr(), count: 0 };
-}
-
-function incrementDailyUsage() {
-  const usage = getDailyUsage();
-  usage.count += 1;
-  usage.date = todayStr();
-  localStorage.setItem(LIMIT_KEY, JSON.stringify(usage));
-}
-
-function getRemainingMessages(): number {
-  return Math.max(0, DAILY_LIMIT - getDailyUsage().count);
-}
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -99,6 +74,7 @@ async function streamFromCoach(
   body: Record<string, unknown>,
   onDelta: (text: string) => void,
   onError: (msg: string) => void,
+  onRemaining?: (n: number) => void,
 ) {
   const resp = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
@@ -113,11 +89,25 @@ async function streamFromCoach(
   );
 
   if (!resp.ok) {
-    if (resp.status === 429) { onError("Too many requests — please wait a moment."); return; }
+    if (resp.status === 429) {
+      try {
+        const errData = await resp.json();
+        onError(errData.error || "Daily limit reached. Come back tomorrow! 🌅");
+        if (errData.remaining !== undefined) onRemaining?.(errData.remaining);
+      } catch {
+        onError("Daily limit reached. Come back tomorrow! 🌅");
+        onRemaining?.(0);
+      }
+      return;
+    }
     if (resp.status === 402) { onError("AI credits exhausted. Please upgrade."); return; }
     throw new Error("Failed to get coaching tips");
   }
   if (!resp.body) throw new Error("No response body");
+
+  // Read remaining from header
+  const remainingHeader = resp.headers.get("X-Remaining-Messages");
+  if (remainingHeader !== null) onRemaining?.(parseInt(remainingHeader, 10));
 
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
@@ -164,6 +154,7 @@ export default function AICoachWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [input, setInput] = useState("");
+  const [remaining, setRemaining] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -173,13 +164,9 @@ export default function AICoachWidget() {
     }
   }, [messages]);
 
-  const remaining = getRemainingMessages();
+  const handleRemaining = useCallback((n: number) => setRemaining(n), []);
 
   const getInitialCoaching = useCallback(async () => {
-    if (getRemainingMessages() <= 0) {
-      setError("You've reached your daily AI Coach limit (10 messages). Come back tomorrow! 🌅");
-      return;
-    }
     setLoading(true);
     setError("");
     setMessages([]);
@@ -187,7 +174,6 @@ export default function AICoachWidget() {
 
     try {
       let finalContent = "";
-      incrementDailyUsage();
       await streamFromCoach(
         { userData, mode: "initial" },
         (accumulated) => {
@@ -195,6 +181,7 @@ export default function AICoachWidget() {
           setMessages([{ role: "assistant", content: accumulated }]);
         },
         (msg) => setError(msg),
+        handleRemaining,
       );
       if (finalContent) {
         setMessages([{ role: "assistant", content: finalContent }]);
@@ -204,14 +191,10 @@ export default function AICoachWidget() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleRemaining]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || loading) return;
-    if (getRemainingMessages() <= 0) {
-      setError("You've reached your daily AI Coach limit (10 messages). Come back tomorrow! 🌅");
-      return;
-    }
 
     const userMsg: Message = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMsg];
@@ -221,7 +204,6 @@ export default function AICoachWidget() {
     setError("");
 
     const userData = gatherUserData();
-    incrementDailyUsage();
 
     try {
       let assistantContent = "";
@@ -238,6 +220,7 @@ export default function AICoachWidget() {
           });
         },
         (msg) => setError(msg),
+        handleRemaining,
       );
     } catch (err: any) {
       setError(err.message || "Something went wrong");
@@ -245,7 +228,7 @@ export default function AICoachWidget() {
       setLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, loading, messages]);
+  }, [input, loading, messages, handleRemaining]);
 
   // Floating button
   if (!open) {
@@ -270,7 +253,7 @@ export default function AICoachWidget() {
         <div className="flex items-center gap-2">
           <Bot size={18} className="text-primary" />
           <span className="font-semibold text-sm text-foreground">AI Coach</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{remaining} left</span>
+          {remaining !== null && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{remaining} left</span>}
         </div>
         <div className="flex items-center gap-1">
           <button
