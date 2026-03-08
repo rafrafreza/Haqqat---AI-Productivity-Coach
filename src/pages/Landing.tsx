@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import {
   Zap, Target, Timer, Battery, Trophy, ArrowRight, Sun, ListTodo
 } from "lucide-react";
@@ -42,6 +42,50 @@ function AnimatedSection({ children, className }: { children: React.ReactNode; c
   );
 }
 
+function HeroParticles() {
+  const particles = useMemo(() =>
+    Array.from({ length: 24 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 4 + 2,
+      duration: Math.random() * 8 + 10,
+      delay: Math.random() * 5,
+      driftX: (Math.random() - 0.5) * 60,
+      driftY: (Math.random() - 0.5) * 60,
+    })),
+  []);
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden>
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full bg-primary"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size,
+          }}
+          animate={{
+            x: [0, p.driftX, 0],
+            y: [0, p.driftY, 0],
+            opacity: [0, 0.25, 0.15, 0],
+            scale: [0.5, 1, 0.5],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            delay: p.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function Landing() {
   const navigate = useNavigate();
 
@@ -76,7 +120,28 @@ export default function Landing() {
       </motion.header>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-32 pb-20 px-6 relative overflow-hidden">
+        {/* Floating particles */}
+        <HeroParticles />
+        {/* Gradient orbs */}
+        <motion.div
+          className="absolute top-20 -left-32 w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] pointer-events-none"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+          animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute -bottom-20 -right-32 w-[400px] h-[400px] rounded-full opacity-15 blur-[100px] pointer-events-none"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+          animate={{ x: [0, -30, 0], y: [0, 40, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full opacity-10 blur-[120px] pointer-events-none"
+          style={{ background: "radial-gradient(ellipse, hsl(var(--primary)) 0%, transparent 60%)" }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.15, 0.1] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
