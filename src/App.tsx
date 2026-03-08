@@ -9,6 +9,10 @@ import Routines from "./pages/Routines";
 import Activities from "./pages/Activities";
 import Analytics from "./pages/Analytics";
 import Insights from "./pages/Insights";
+import Goals from "./pages/Goals";
+import Tasks from "./pages/Tasks";
+import Focus from "./pages/Focus";
+import Reviews from "./pages/Reviews";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +30,10 @@ const App = () => (
             <Route path="/activities" element={<Activities />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/insights" element={<Insights />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/focus" element={<Focus />} />
+            <Route path="/reviews" element={<Reviews />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
