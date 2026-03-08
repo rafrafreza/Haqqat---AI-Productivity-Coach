@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Lock, Zap, Eye, EyeOff } from "lucide-react";
+import { Lock, Eye, EyeOff } from "lucide-react";
+import HaqqatLogo from "@/components/HaqqatLogo";
 import { useNavigate } from "react-router-dom";
 
 export default function ResetPassword() {
@@ -30,7 +31,7 @@ export default function ResetPassword() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-2">
-            <Zap size={28} className="text-primary" />
+            <HaqqatLogo size={28} />
             <h1 className="text-3xl font-display text-foreground">Haqqat</h1>
           </div>
         </div>

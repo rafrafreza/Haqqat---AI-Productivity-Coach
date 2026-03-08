@@ -2,8 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { useRef, useMemo } from "react";
 import {
-  Zap, Target, Timer, Battery, Trophy, ArrowRight, Sun, ListTodo
+  Target, Timer, Battery, Trophy, ArrowRight, Sun, ListTodo
 } from "lucide-react";
+import HaqqatLogo from "@/components/HaqqatLogo";
 
 const features = [
   { icon: Sun, title: "Morning Ritual", desc: "Start each day with intention. Build a ritual that sets the tone for peak performance." },
@@ -100,7 +101,7 @@ export default function Landing() {
       >
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <Zap size={24} className="text-primary" />
+            <HaqqatLogo size={24} />
             <span className="text-xl font-display text-foreground">Haqqat</span>
           </div>
           <div className="flex items-center gap-3">
@@ -149,12 +150,12 @@ export default function Landing() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-8"
           >
-            <motion.span
-              animate={{ rotate: [0, 15, -15, 0] }}
+           <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
             >
-              <Zap size={12} />
-            </motion.span>
+              <HaqqatLogo size={14} />
+            </motion.div>
             Your personal productivity system
           </motion.div>
 
@@ -337,7 +338,7 @@ export default function Landing() {
       <footer className="border-t border-border py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Zap size={16} className="text-primary" />
+            <HaqqatLogo size={16} />
             <span className="text-sm">Haqqat</span>
           </div>
           <p className="text-xs text-muted-foreground">
