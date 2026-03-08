@@ -154,6 +154,7 @@ export default function AICoachWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [input, setInput] = useState("");
+  const [remaining, setRemaining] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -163,13 +164,9 @@ export default function AICoachWidget() {
     }
   }, [messages]);
 
-  const remaining = getRemainingMessages();
+  const handleRemaining = useCallback((n: number) => setRemaining(n), []);
 
   const getInitialCoaching = useCallback(async () => {
-    if (getRemainingMessages() <= 0) {
-      setError("You've reached your daily AI Coach limit (10 messages). Come back tomorrow! 🌅");
-      return;
-    }
     setLoading(true);
     setError("");
     setMessages([]);
@@ -177,7 +174,6 @@ export default function AICoachWidget() {
 
     try {
       let finalContent = "";
-      incrementDailyUsage();
       await streamFromCoach(
         { userData, mode: "initial" },
         (accumulated) => {
@@ -185,6 +181,7 @@ export default function AICoachWidget() {
           setMessages([{ role: "assistant", content: accumulated }]);
         },
         (msg) => setError(msg),
+        handleRemaining,
       );
       if (finalContent) {
         setMessages([{ role: "assistant", content: finalContent }]);
@@ -194,14 +191,10 @@ export default function AICoachWidget() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleRemaining]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || loading) return;
-    if (getRemainingMessages() <= 0) {
-      setError("You've reached your daily AI Coach limit (10 messages). Come back tomorrow! 🌅");
-      return;
-    }
 
     const userMsg: Message = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMsg];
@@ -211,7 +204,6 @@ export default function AICoachWidget() {
     setError("");
 
     const userData = gatherUserData();
-    incrementDailyUsage();
 
     try {
       let assistantContent = "";
@@ -228,6 +220,7 @@ export default function AICoachWidget() {
           });
         },
         (msg) => setError(msg),
+        handleRemaining,
       );
     } catch (err: any) {
       setError(err.message || "Something went wrong");
@@ -235,7 +228,7 @@ export default function AICoachWidget() {
       setLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, loading, messages]);
+  }, [input, loading, messages, handleRemaining]);
 
   // Floating button
   if (!open) {
