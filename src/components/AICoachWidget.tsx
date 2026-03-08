@@ -74,6 +74,7 @@ async function streamFromCoach(
   body: Record<string, unknown>,
   onDelta: (text: string) => void,
   onError: (msg: string) => void,
+  onRemaining?: (n: number) => void,
 ) {
   const resp = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
@@ -88,11 +89,25 @@ async function streamFromCoach(
   );
 
   if (!resp.ok) {
-    if (resp.status === 429) { onError("Too many requests — please wait a moment."); return; }
+    if (resp.status === 429) {
+      try {
+        const errData = await resp.json();
+        onError(errData.error || "Daily limit reached. Come back tomorrow! 🌅");
+        if (errData.remaining !== undefined) onRemaining?.(errData.remaining);
+      } catch {
+        onError("Daily limit reached. Come back tomorrow! 🌅");
+        onRemaining?.(0);
+      }
+      return;
+    }
     if (resp.status === 402) { onError("AI credits exhausted. Please upgrade."); return; }
     throw new Error("Failed to get coaching tips");
   }
   if (!resp.body) throw new Error("No response body");
+
+  // Read remaining from header
+  const remainingHeader = resp.headers.get("X-Remaining-Messages");
+  if (remainingHeader !== null) onRemaining?.(parseInt(remainingHeader, 10));
 
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
