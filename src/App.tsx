@@ -4,10 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+
 import XPNotificationLayer from "@/components/XPNotification";
 import ConfettiLayer from "@/components/Confetti";
-import { ProGate } from "@/components/ProGate";
+
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Routines from "./pages/Routines";
@@ -27,7 +27,7 @@ import Gamification from "./pages/Gamification";
 import MorningRitual from "./pages/MorningRitual";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
-import Pricing from "./pages/Pricing";
+
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -40,15 +40,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function ProRoute({ children, feature }: { children: React.ReactNode; feature: string }) {
-  return <ProGate feature={feature}>{children}</ProGate>;
-}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <SubscriptionProvider>
+        
           <Toaster />
           <Sonner />
           <XPNotificationLayer />
@@ -66,22 +63,20 @@ const App = () => (
                 <Route path="/focus" element={<Focus />} />
                 <Route path="/reviews" element={<Reviews />} />
                 <Route path="/activities" element={<Activities />} />
-                <Route path="/pricing" element={<Pricing />} />
                 <Route path="/settings" element={<Settings />} />
-                {/* Pro features */}
-                <Route path="/energy" element={<ProRoute feature="Energy Map"><EnergyMap /></ProRoute>} />
-                <Route path="/decisions" element={<ProRoute feature="Decision Journal"><DecisionJournal /></ProRoute>} />
-                <Route path="/procrastination" element={<ProRoute feature="Procrastination Autopsy"><ProcrastinationAutopsy /></ProRoute>} />
-                <Route path="/letters" element={<ProRoute feature="Future Letters"><FutureLetters /></ProRoute>} />
-                <Route path="/balance" element={<ProRoute feature="Life Balance"><LifeBalance /></ProRoute>} />
-                <Route path="/xp" element={<ProRoute feature="Level Up"><Gamification /></ProRoute>} />
-                <Route path="/analytics" element={<ProRoute feature="Analytics"><Analytics /></ProRoute>} />
-                <Route path="/insights" element={<ProRoute feature="Insights"><Insights /></ProRoute>} />
+                <Route path="/energy" element={<EnergyMap />} />
+                <Route path="/decisions" element={<DecisionJournal />} />
+                <Route path="/procrastination" element={<ProcrastinationAutopsy />} />
+                <Route path="/letters" element={<FutureLetters />} />
+                <Route path="/balance" element={<LifeBalance />} />
+                <Route path="/xp" element={<Gamification />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/insights" element={<Insights />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </SubscriptionProvider>
+        
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
