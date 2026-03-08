@@ -1,10 +1,12 @@
-import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar, LogOut, Crown } from "lucide-react";
+import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar, LogOut, Crown, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ProBadge, isProFeature } from "@/components/ProGate";
+import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const bottomLinks = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
@@ -54,6 +56,9 @@ export default function MobileNav() {
   const startY = useRef(0);
   const { signOut, user } = useAuth();
   const { isPro } = useSubscription();
+  const { profile } = useProfile();
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  const initials = displayName.charAt(0).toUpperCase();
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     startY.current = e.touches[0].clientY;
@@ -130,11 +135,16 @@ export default function MobileNav() {
           </nav>
           <div className="absolute bottom-20 left-0 right-0 px-5 border-t border-border pt-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                {user?.email?.charAt(0).toUpperCase()}
-              </div>
+              <NavLink to="/settings" onClick={() => setOpen(false)}>
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+                  <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+                </Avatar>
+              </NavLink>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
+                <NavLink to="/settings" onClick={() => setOpen(false)}>
+                  <p className="text-xs font-medium text-foreground truncate">{displayName}</p>
+                </NavLink>
                 <p className="text-[10px] text-muted-foreground">{isPro ? 'Pro' : 'Free'}</p>
               </div>
               <button onClick={signOut} className="p-2 text-muted-foreground hover:text-foreground">

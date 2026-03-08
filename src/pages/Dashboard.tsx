@@ -6,12 +6,14 @@ import { Progress } from "@/components/ui/progress";
 import DashboardXPWidget from "@/components/DashboardXPWidget";
 import { useXPAward } from "@/hooks/useXP";
 import { notifyXP } from "@/components/XPNotification";
+import { useProfile } from "@/hooks/useProfile";
 
 export default function Dashboard() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [logs, setLogs] = useState<RoutineLog[]>([]);
   const today = todayStr();
   const { grantXP } = useXPAward();
+  const { profile } = useProfile();
 
   useEffect(() => {
     setRoutines(getRoutines());
@@ -66,7 +68,9 @@ export default function Dashboard() {
   }, 0);
 
   const now = new Date();
-  const greeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 17 ? "Good afternoon" : "Good evening";
+  const firstName = profile?.display_name?.split(" ")[0];
+  const timeGreeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 17 ? "Good afternoon" : "Good evening";
+  const greeting = firstName ? `${timeGreeting}, ${firstName}` : timeGreeting;
 
   return (
     <div className="p-6 md:p-10 max-w-4xl mx-auto">

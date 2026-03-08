@@ -28,6 +28,7 @@ import MorningRitual from "./pages/MorningRitual";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
                 <Route path="/reviews" element={<Reviews />} />
                 <Route path="/activities" element={<Activities />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/settings" element={<Settings />} />
                 {/* Pro features */}
                 <Route path="/energy" element={<ProRoute feature="Energy Map"><EnergyMap /></ProRoute>} />
                 <Route path="/decisions" element={<ProRoute feature="Decision Journal"><DecisionJournal /></ProRoute>} />
