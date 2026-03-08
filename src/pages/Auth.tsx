@@ -73,7 +73,7 @@ export default function Auth() {
             <Zap size={28} className="text-primary" />
             <h1 className="text-3xl font-display text-foreground">Haqqat</h1>
           </div>
-          <p className="text-sm text-muted-foreground">Track · Focus · Achieve</p>
+          <p className="text-sm text-muted-foreground">Align · Build · Evolve</p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
