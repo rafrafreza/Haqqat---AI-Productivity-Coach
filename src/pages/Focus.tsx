@@ -58,6 +58,8 @@ export default function Focus() {
       const updated = [session, ...sessions];
       setSessions(updated);
       saveFocusSessions(updated);
+      const xpResult = grantXP('focus', `${settings.workMinutes}min focus session`, Math.floor(settings.workMinutes / 5) * 5);
+      notifyXP(xpResult);
 
       const newCount = sessionCount + 1;
       setSessionCount(newCount);
