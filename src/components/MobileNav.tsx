@@ -75,10 +75,22 @@ export default function MobileNav() {
     }
     setSwipeY(0);
   }, [swipeY]);
+
+  return (
     <>
       {/* Full menu overlay */}
       {open && (
-        <div className="md:hidden fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm animate-fade-in">
+        <div
+          className="md:hidden fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm animate-fade-in"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={{
+            transform: swipeY > 0 ? `translateY(${swipeY}px)` : undefined,
+            opacity: swipeY > 0 ? Math.max(0, 1 - swipeY / 300) : 1,
+            transition: dragging ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
+          }}
+        >
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
             <h2 className="text-lg font-display text-primary">DayFlow</h2>
             <button onClick={() => setOpen(false)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground">
