@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, Circle, Flame, TrendingUp, Clock, AlertTriangle, Target, Timer, ListTodo, Zap } from "lucide-react";
-import { getRoutines, getLogs, saveLogs, todayStr, getStreakForRoutine, getActivities, getTasks, getGoals, getFocusSessions, getOverdueTasks, getDueSoonTasks, getTodayFocusMinutes, calculateDailyProductivityScore, getGoalProgress, type Routine, type RoutineLog } from "@/lib/store";
+import { getRoutines, getLogs, saveLogs, todayStr, getStreakForRoutine, getActivities, getTasks, getGoals, getFocusSessions, getOverdueTasks, getDueSoonTasks, getTodayFocusMinutes, calculateDailyProductivityScore, getGoalProgress, awardXP, type Routine, type RoutineLog } from "@/lib/store";
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import DashboardXPWidget from "@/components/DashboardXPWidget";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 
 export default function Dashboard() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [logs, setLogs] = useState<RoutineLog[]>([]);
   const today = todayStr();
+  const { grantXP } = useXPAward();
 
   useEffect(() => {
     setRoutines(getRoutines());
@@ -32,7 +36,13 @@ export default function Dashboard() {
     }
     setLogs(newLogs);
     saveLogs(newLogs);
-  };
+    // Award XP for completing a routine
+    const wasCompleted = existing?.completed;
+    const isNowCompleted = newLogs.find(l => l.date === today && l.routineId === routineId)?.completed;
+    if (isNowCompleted && !wasCompleted) {
+      const result = grantXP('routine', 'Completed routine');
+      notifyXP(result);
+    }
 
   const isCompleted = (routineId: string) =>
     logs.some(l => l.date === today && l.routineId === routineId && l.completed);
