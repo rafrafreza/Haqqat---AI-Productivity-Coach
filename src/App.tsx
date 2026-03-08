@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+
 import XPNotificationLayer from "@/components/XPNotification";
 import ConfettiLayer from "@/components/Confetti";
 
@@ -45,7 +45,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <SubscriptionProvider>
+        
           <Toaster />
           <Sonner />
           <XPNotificationLayer />
@@ -76,7 +76,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </SubscriptionProvider>
+        
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
