@@ -790,6 +790,179 @@ export function claimDailyChallenge(challengeId: string): XPEvent | null {
   return awardXP('streak-bonus', `Daily Challenge: ${found.challenge.title}`, found.challenge.xpReward);
 }
 
+// ===== PERSONAL RECORDS =====
+
+export interface PersonalRecords {
+  bestDayXP: { value: number; date: string };
+  mostTasksInDay: { value: number; date: string };
+  longestFocusSession: { value: number; date: string };
+  mostRoutinesInDay: { value: number; date: string };
+  bestStreakEver: number;
+  mostDecisionsInDay: { value: number; date: string };
+  totalLifetimeXP: number;
+}
+
+export function getPersonalRecords(): PersonalRecords {
+  const events = getXPEvents();
+  const tasks = getTasks();
+  const sessions = getFocusSessions();
+  const logs = getLogs();
+  const decisions = getDecisions();
+
+  // Best day XP
+  const xpByDay: Record<string, number> = {};
+  events.forEach(e => { xpByDay[e.date] = (xpByDay[e.date] || 0) + e.amount; });
+  const bestDayEntry = Object.entries(xpByDay).sort((a, b) => b[1] - a[1])[0];
+  const bestDayXP = bestDayEntry ? { value: bestDayEntry[1], date: bestDayEntry[0] } : { value: 0, date: '' };
+
+  // Most tasks in a day
+  const tasksByDay: Record<string, number> = {};
+  tasks.filter(t => t.completedAt).forEach(t => {
+    const d = t.completedAt!.slice(0, 10);
+    tasksByDay[d] = (tasksByDay[d] || 0) + 1;
+  });
+  const bestTaskDay = Object.entries(tasksByDay).sort((a, b) => b[1] - a[1])[0];
+  const mostTasksInDay = bestTaskDay ? { value: bestTaskDay[1], date: bestTaskDay[0] } : { value: 0, date: '' };
+
+  // Longest focus session
+  const bestSession = sessions.filter(s => s.completed).sort((a, b) => b.duration - a.duration)[0];
+  const longestFocusSession = bestSession ? { value: bestSession.duration, date: bestSession.date } : { value: 0, date: '' };
+
+  // Most routines in a day
+  const routinesByDay: Record<string, number> = {};
+  logs.filter(l => l.completed).forEach(l => { routinesByDay[l.date] = (routinesByDay[l.date] || 0) + 1; });
+  const bestRoutineDay = Object.entries(routinesByDay).sort((a, b) => b[1] - a[1])[0];
+  const mostRoutinesInDay = bestRoutineDay ? { value: bestRoutineDay[1], date: bestRoutineDay[0] } : { value: 0, date: '' };
+
+  // Most decisions in a day
+  const decByDay: Record<string, number> = {};
+  decisions.forEach(d => { decByDay[d.date] = (decByDay[d.date] || 0) + 1; });
+  const bestDecDay = Object.entries(decByDay).sort((a, b) => b[1] - a[1])[0];
+  const mostDecisionsInDay = bestDecDay ? { value: bestDecDay[1], date: bestDecDay[0] } : { value: 0, date: '' };
+
+  const stats = getGamificationStats();
+
+  return {
+    bestDayXP,
+    mostTasksInDay,
+    longestFocusSession,
+    mostRoutinesInDay,
+    bestStreakEver: stats.longestStreak,
+    mostDecisionsInDay,
+    totalLifetimeXP: stats.totalXP,
+  };
+}
+
+// ===== WEEKLY CHALLENGES =====
+
+export interface WeeklyChallenge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  xpReward: number;
+  conditions: { source: XPEvent['source']; count: number }[];
+}
+
+const ALL_WEEKLY_CHALLENGES: WeeklyChallenge[] = [
+  {
+    id: 'wk-ironman',
+    title: 'Iron Week',
+    description: 'Complete 20 routines + 10 tasks + 5 focus sessions this week',
+    icon: '🦾',
+    xpReward: 150,
+    conditions: [{ source: 'routine', count: 20 }, { source: 'task', count: 10 }, { source: 'focus', count: 5 }],
+  },
+  {
+    id: 'wk-explorer',
+    title: 'Explorer\'s Journey',
+    description: 'Log energy 5x + record 3 decisions + write 1 letter this week',
+    icon: '🗺️',
+    xpReward: 120,
+    conditions: [{ source: 'energy', count: 5 }, { source: 'decision', count: 3 }, { source: 'letter', count: 1 }],
+  },
+  {
+    id: 'wk-zen',
+    title: 'Zen Master',
+    description: 'Complete 5 morning rituals + 7 focus sessions + 3 reviews',
+    icon: '☯️',
+    xpReward: 200,
+    conditions: [{ source: 'morning-ritual', count: 5 }, { source: 'focus', count: 7 }, { source: 'review', count: 3 }],
+  },
+  {
+    id: 'wk-grinder',
+    title: 'The Grinder',
+    description: 'Complete 30 routines + 15 tasks this week',
+    icon: '⚙️',
+    xpReward: 175,
+    conditions: [{ source: 'routine', count: 30 }, { source: 'task', count: 15 }],
+  },
+  {
+    id: 'wk-scientist',
+    title: 'Life Scientist',
+    description: 'Log energy 7x + record 5 decisions + complete 5 morning rituals',
+    icon: '🔬',
+    xpReward: 160,
+    conditions: [{ source: 'energy', count: 7 }, { source: 'decision', count: 5 }, { source: 'morning-ritual', count: 5 }],
+  },
+];
+
+export function getWeeklyChallenges(): { challenge: WeeklyChallenge; progress: { source: string; current: number; required: number }[]; completed: boolean; claimed: boolean; daysLeft: number }[] {
+  const today = new Date();
+  const day = today.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset);
+  const mondayStr = monday.toISOString().slice(0, 10);
+  const sundayDate = new Date(monday);
+  sundayDate.setDate(monday.getDate() + 6);
+  const daysLeft = Math.max(0, Math.ceil((sundayDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+
+  const events = getXPEvents().filter(e => e.date >= mondayStr);
+
+  // Pick 2 weekly challenges based on week number
+  const weekNum = Math.floor((today.getTime() - new Date('2024-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000));
+  const picked: WeeklyChallenge[] = [];
+  for (let i = 0; i < 2; i++) {
+    picked.push(ALL_WEEKLY_CHALLENGES[(weekNum + i) % ALL_WEEKLY_CHALLENGES.length]);
+  }
+
+  const claimedKey = `dayflow_weekly_challenges_claimed_${mondayStr}`;
+  const claimed: string[] = load(claimedKey, []);
+
+  return picked.map(challenge => {
+    const progress = challenge.conditions.map(cond => ({
+      source: cond.source,
+      current: events.filter(e => e.source === cond.source).length,
+      required: cond.count,
+    }));
+    const completed = progress.every(p => p.current >= p.required);
+    return { challenge, progress, completed, claimed: claimed.includes(challenge.id), daysLeft };
+  });
+}
+
+export function claimWeeklyChallenge(challengeId: string): XPEvent | null {
+  const today = new Date();
+  const day = today.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset);
+  const mondayStr = monday.toISOString().slice(0, 10);
+
+  const claimedKey = `dayflow_weekly_challenges_claimed_${mondayStr}`;
+  const claimed: string[] = load(claimedKey, []);
+  if (claimed.includes(challengeId)) return null;
+
+  const challenges = getWeeklyChallenges();
+  const found = challenges.find(c => c.challenge.id === challengeId);
+  if (!found || !found.completed) return null;
+
+  claimed.push(challengeId);
+  save(claimedKey, claimed);
+
+  return awardXP('streak-bonus', `Weekly Challenge: ${found.challenge.title}`, found.challenge.xpReward);
+}
+
 export function getLifeBalanceScores(): Record<string, number> {
   const activities = getActivities();
   const tasks = getTasks();

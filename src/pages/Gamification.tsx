@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Trophy, Star, Flame, Zap, Lock, Unlock, TrendingUp, Award, Gift, CheckCircle } from "lucide-react";
-import { getGamificationStats, getWeeklyXPData, getDailyChallenges, claimDailyChallenge, ACHIEVEMENTS, type GamificationStats, type Achievement } from "@/lib/store";
+import { Trophy, Star, Flame, Zap, Lock, Unlock, TrendingUp, Award, Gift, CheckCircle, Crown, Calendar, Target } from "lucide-react";
+import { getGamificationStats, getWeeklyXPData, getDailyChallenges, claimDailyChallenge, getWeeklyChallenges, claimWeeklyChallenge, getPersonalRecords, ACHIEVEMENTS, type GamificationStats, type Achievement, type PersonalRecords } from "@/lib/store";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useXPAward } from "@/hooks/useXP";
@@ -24,16 +24,26 @@ const categoryColors: Record<string, string> = {
   milestone: 'text-amber-500',
 };
 
+function formatDate(ds: string) {
+  if (!ds) return '—';
+  const d = new Date(ds + 'T00:00:00');
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
 export default function Gamification() {
   const [stats, setStats] = useState<GamificationStats | null>(null);
   const [weeklyData, setWeeklyData] = useState<{ day: string; xp: number; date: string }[]>([]);
   const [challenges, setChallenges] = useState<ReturnType<typeof getDailyChallenges>>([]);
+  const [weeklyChallenges, setWeeklyChallenges] = useState<ReturnType<typeof getWeeklyChallenges>>([]);
+  const [records, setRecords] = useState<PersonalRecords | null>(null);
   const { grantXP } = useXPAward();
 
   const refresh = () => {
     setStats(getGamificationStats());
     setWeeklyData(getWeeklyXPData());
     setChallenges(getDailyChallenges());
+    setWeeklyChallenges(getWeeklyChallenges());
+    setRecords(getPersonalRecords());
   };
 
   useEffect(() => { refresh(); }, []);
@@ -41,26 +51,24 @@ export default function Gamification() {
   const handleClaim = (challengeId: string) => {
     const event = claimDailyChallenge(challengeId);
     if (event) {
-      // Use the XP notification system
-      const result = {
-        event,
-        totalXP: 0,
-        level: 0,
-        previousLevel: 0,
-        leveledUp: false,
-        newAchievements: [],
-      };
-      notifyXP(result);
+      notifyXP({ event, totalXP: 0, level: 0, previousLevel: 0, leveledUp: false, newAchievements: [] });
       refresh();
     }
   };
 
-  if (!stats) return null;
+  const handleWeeklyClaim = (challengeId: string) => {
+    const event = claimWeeklyChallenge(challengeId);
+    if (event) {
+      notifyXP({ event, totalXP: 0, level: 0, previousLevel: 0, leveledUp: false, newAchievements: [] });
+      refresh();
+    }
+  };
+
+  if (!stats || !records) return null;
 
   const levelProgress = stats.nextLevelXP > 0 ? (stats.currentLevelXP / stats.nextLevelXP) * 100 : 100;
   const unlocked = ACHIEVEMENTS.filter(a => stats.unlockedAchievements.includes(a.id));
   const locked = ACHIEVEMENTS.filter(a => !stats.unlockedAchievements.includes(a.id));
-  const maxXP = Math.max(...weeklyData.map(d => d.xp), 1);
   const todayDate = new Date().toISOString().slice(0, 10);
 
   return (
@@ -107,6 +115,21 @@ export default function Gamification() {
         <StatBox icon={<Trophy size={18} />} label="Achievements" value={`${unlocked.length}/${ACHIEVEMENTS.length}`} />
       </div>
 
+      {/* Personal Records */}
+      <div className="bg-card border border-amber-500/20 rounded-xl p-6 mb-8">
+        <h3 className="text-lg font-display text-foreground mb-4 flex items-center gap-2">
+          <Crown size={18} className="text-amber-500" /> Personal Records
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <RecordCard emoji="⚡" title="Best Day XP" value={`${records.bestDayXP.value}`} sub={formatDate(records.bestDayXP.date)} />
+          <RecordCard emoji="✅" title="Most Tasks (Day)" value={`${records.mostTasksInDay.value}`} sub={formatDate(records.mostTasksInDay.date)} />
+          <RecordCard emoji="🎯" title="Longest Focus" value={`${records.longestFocusSession.value}m`} sub={formatDate(records.longestFocusSession.date)} />
+          <RecordCard emoji="🔄" title="Most Routines (Day)" value={`${records.mostRoutinesInDay.value}`} sub={formatDate(records.mostRoutinesInDay.date)} />
+          <RecordCard emoji="🔥" title="Best Streak" value={`${records.bestStreakEver}d`} sub="All time" />
+          <RecordCard emoji="⚖️" title="Most Decisions (Day)" value={`${records.mostDecisionsInDay.value}`} sub={formatDate(records.mostDecisionsInDay.date)} />
+        </div>
+      </div>
+
       {/* Weekly XP Chart */}
       <div className="bg-card border border-border rounded-xl p-6 mb-8">
         <h3 className="text-lg font-display text-foreground mb-4 flex items-center gap-2">
@@ -129,10 +152,7 @@ export default function Gamification() {
               />
               <Bar dataKey="xp" radius={[6, 6, 0, 0]}>
                 {weeklyData.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={entry.date === todayDate ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.3)'}
-                  />
+                  <Cell key={index} fill={entry.date === todayDate ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.3)'} />
                 ))}
               </Bar>
             </BarChart>
@@ -147,47 +167,22 @@ export default function Gamification() {
         </h3>
         <div className="space-y-3">
           {challenges.map(({ challenge, progress, completed, claimed }) => (
-            <div
-              key={challenge.id}
-              className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
-                claimed ? 'border-primary/20 bg-primary/5 opacity-70' :
-                completed ? 'border-primary/40 bg-primary/10' :
-                'border-border bg-secondary/20'
-              }`}
-            >
-              <span className="text-2xl">{challenge.icon}</span>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-foreground">{challenge.title}</p>
-                <p className="text-xs text-muted-foreground">{challenge.description}</p>
-                <div className="flex gap-2 mt-2">
-                  {progress.map((p, i) => (
-                    <div key={i} className="flex items-center gap-1">
-                      <div className={`h-1.5 w-8 rounded-full ${p.current >= p.required ? 'bg-primary' : 'bg-muted'}`} />
-                      <span className="text-[10px] text-muted-foreground">
-                        {Math.min(p.current, p.required)}/{p.required} {p.source}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                {claimed ? (
-                  <div className="flex items-center gap-1 text-primary">
-                    <CheckCircle size={14} />
-                    <span className="text-xs font-bold">Claimed</span>
-                  </div>
-                ) : completed ? (
-                  <button
-                    onClick={() => handleClaim(challenge.id)}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-bounce-gentle"
-                  >
-                    +{challenge.xpReward} XP
-                  </button>
-                ) : (
-                  <span className="text-xs font-bold text-muted-foreground">+{challenge.xpReward} XP</span>
-                )}
-              </div>
-            </div>
+            <ChallengeRow key={challenge.id} icon={challenge.icon} title={challenge.title} description={challenge.description} xpReward={challenge.xpReward} progress={progress} completed={completed} claimed={claimed} onClaim={() => handleClaim(challenge.id)} />
+          ))}
+        </div>
+      </div>
+
+      {/* Weekly Challenges */}
+      <div className="bg-card border border-primary/10 rounded-xl p-6 mb-8">
+        <h3 className="text-lg font-display text-foreground mb-1 flex items-center gap-2">
+          <Calendar size={18} className="text-primary" /> Weekly Missions
+        </h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          {weeklyChallenges[0]?.daysLeft ?? 0} days remaining this week
+        </p>
+        <div className="space-y-3">
+          {weeklyChallenges.map(({ challenge, progress, completed, claimed }) => (
+            <ChallengeRow key={challenge.id} icon={challenge.icon} title={challenge.title} description={challenge.description} xpReward={challenge.xpReward} progress={progress} completed={completed} claimed={claimed} onClaim={() => handleWeeklyClaim(challenge.id)} weekly />
           ))}
         </div>
       </div>
@@ -215,9 +210,7 @@ export default function Gamification() {
             <Unlock size={18} className="text-primary" /> Unlocked ({unlocked.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {unlocked.map(a => (
-              <AchievementCard key={a.id} achievement={a} unlocked />
-            ))}
+            {unlocked.map(a => <AchievementCard key={a.id} achievement={a} unlocked />)}
           </div>
         </div>
       )}
@@ -229,12 +222,75 @@ export default function Gamification() {
             <Lock size={18} className="text-muted-foreground" /> Locked ({locked.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {locked.map(a => (
-              <AchievementCard key={a.id} achievement={a} unlocked={false} />
-            ))}
+            {locked.map(a => <AchievementCard key={a.id} achievement={a} unlocked={false} />)}
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ===== Sub-components =====
+
+function RecordCard({ emoji, title, value, sub }: { emoji: string; title: string; value: string; sub: string }) {
+  return (
+    <div className="p-4 rounded-xl border border-amber-500/10 bg-amber-500/5 text-center">
+      <span className="text-xl">{emoji}</span>
+      <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+      <p className="text-xs font-medium text-foreground">{title}</p>
+      <p className="text-[10px] text-muted-foreground">{sub}</p>
+    </div>
+  );
+}
+
+function ChallengeRow({ icon, title, description, xpReward, progress, completed, claimed, onClaim, weekly }: {
+  icon: string; title: string; description: string; xpReward: number;
+  progress: { source: string; current: number; required: number }[];
+  completed: boolean; claimed: boolean; onClaim: () => void; weekly?: boolean;
+}) {
+  return (
+    <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
+      claimed ? 'border-primary/20 bg-primary/5 opacity-70' :
+      completed ? 'border-primary/40 bg-primary/10' :
+      'border-border bg-secondary/20'
+    }`}>
+      <span className="text-2xl">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-sm text-foreground">{title}</p>
+          {weekly && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold uppercase tracking-wider">Weekly</span>}
+        </div>
+        <p className="text-xs text-muted-foreground">{description}</p>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {progress.map((p, i) => {
+            const pct = Math.min((p.current / p.required) * 100, 100);
+            return (
+              <div key={i} className="flex items-center gap-1">
+                <div className="h-1.5 w-10 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {Math.min(p.current, p.required)}/{p.required} {p.source}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="text-right shrink-0">
+        {claimed ? (
+          <div className="flex items-center gap-1 text-primary">
+            <CheckCircle size={14} />
+            <span className="text-xs font-bold">Claimed</span>
+          </div>
+        ) : completed ? (
+          <button onClick={onClaim} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors animate-bounce-gentle">
+            +{xpReward} XP
+          </button>
+        ) : (
+          <span className="text-xs font-bold text-muted-foreground">+{xpReward} XP</span>
+        )}
+      </div>
     </div>
   );
 }
