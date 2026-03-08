@@ -12,7 +12,7 @@ export default function HaqqatLogo({ size = 24, className = "" }: HaqqatLogoProp
       alt="Haqqat logo"
       width={size}
       height={size}
-      className={className}
+      className={`haqqat-logo ${className}`}
     />
   );
 }
