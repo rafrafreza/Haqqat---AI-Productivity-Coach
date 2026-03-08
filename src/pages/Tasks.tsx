@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, CheckCircle2, Circle, AlertTriangle, Clock, Zap, Inbox, ArrowUp, Filter } from "lucide-react";
 import { getTasks, saveTasks, generateId, getOverdueTasks, getDueSoonTasks, getTasksByEisenhower, type Task } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +34,7 @@ export default function Tasks() {
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
   const [view, setView] = useState<'matrix' | 'list'>('matrix');
 
+  const { grantXP } = useXPAward();
   useEffect(() => { setTasks(getTasks()); }, []);
 
   const update = (t: Task[]) => { setTasks(t); saveTasks(t); };
@@ -49,11 +52,17 @@ export default function Tasks() {
   };
 
   const toggleTask = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    const completing = task && task.status !== 'done';
     update(tasks.map(t => t.id === id ? {
       ...t,
       status: t.status === 'done' ? 'todo' : 'done',
       completedAt: t.status !== 'done' ? new Date().toISOString() : undefined,
     } : t));
+    if (completing) {
+      const result = grantXP('task', `Completed: ${task?.title || 'task'}`);
+      notifyXP(result);
+    }
   };
 
   const deleteTask = (id: string) => update(tasks.filter(t => t.id !== id));

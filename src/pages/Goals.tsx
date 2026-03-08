@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Target, ChevronDown, ChevronRight, Trash2, CheckCircle2, Circle, Calendar, Flag } from "lucide-react";
 import { getGoals, saveGoals, generateId, getGoalProgress, type Goal, type Milestone } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +27,7 @@ export default function Goals() {
 
   useEffect(() => { setGoals(getGoals()); }, []);
 
+  const { grantXP } = useXPAward();
   const update = (g: Goal[]) => { setGoals(g); saveGoals(g); };
 
   const addGoal = () => {
@@ -46,10 +49,17 @@ export default function Goals() {
   };
 
   const toggleMilestone = (goalId: string, milestoneId: string) => {
+    const goal = goals.find(g => g.id === goalId);
+    const milestone = goal?.milestones.find(m => m.id === milestoneId);
+    const completing = milestone && !milestone.completed;
     update(goals.map(g => g.id === goalId ? {
       ...g,
       milestones: g.milestones.map(m => m.id === milestoneId ? { ...m, completed: !m.completed, completedAt: !m.completed ? new Date().toISOString() : undefined } : m)
     } : g));
+    if (completing) {
+      const result = grantXP('goal', `Milestone: ${milestone?.title || 'completed'}`, 15);
+      notifyXP(result);
+    }
   };
 
   const addMilestoneToGoal = (goalId: string, title: string) => {

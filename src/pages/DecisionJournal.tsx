@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Scale, ChevronDown, ChevronRight, CheckCircle2, Clock, AlertCircle, Trash2 } from "lucide-react";
 import { getDecisions, saveDecisions, getDecisionAccuracy, generateId, todayStr, type Decision } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +36,7 @@ export default function DecisionJournal() {
   const [outcomeScore, setOutcomeScore] = useState(5);
   const [lessonLearned, setLessonLearned] = useState("");
 
+  const { grantXP } = useXPAward();
   useEffect(() => { setDecisions(getDecisions()); }, []);
 
   const update = (d: Decision[]) => { setDecisions(d); saveDecisions(d); };
@@ -49,6 +52,8 @@ export default function DecisionJournal() {
       category, revisitDate: revisitDate.toISOString().slice(0, 10), status: 'pending',
     };
     update([decision, ...decisions]);
+    const result = grantXP('decision', `Decision: ${title.trim()}`);
+    notifyXP(result);
     resetForm();
     setOpen(false);
   };

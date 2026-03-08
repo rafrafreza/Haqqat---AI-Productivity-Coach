@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Play, Pause, RotateCcw, Settings, Timer, Zap, Coffee, Brain } from "lucide-react";
 import { getFocusSessions, saveFocusSessions, getPomodoroSettings, savePomodoroSettings, generateId, todayStr, getTodayFocusMinutes, getWeekFocusMinutes, type FocusSession, type PomodoroSettings } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +21,7 @@ export default function Focus() {
   const intervalRef = useRef<number | null>(null);
   const startTimeRef = useRef<string>("");
 
+  const { grantXP } = useXPAward();
   useEffect(() => { setSessions(getFocusSessions()); }, []);
 
   const phaseDuration = useCallback((p: Phase) => {
@@ -55,6 +58,8 @@ export default function Focus() {
       const updated = [session, ...sessions];
       setSessions(updated);
       saveFocusSessions(updated);
+      const xpResult = grantXP('focus', `${settings.workMinutes}min focus session`, Math.floor(settings.workMinutes / 5) * 5);
+      notifyXP(xpResult);
 
       const newCount = sessionCount + 1;
       setSessionCount(newCount);

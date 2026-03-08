@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Trash2, TrendingUp, AlertTriangle, Brain, Zap } from "lucide-react";
 import { getProcrastinationEntries, saveProcrastinationEntries, getProcrastinationPatterns, generateId, todayStr, type ProcrastinationEntry } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +37,7 @@ export default function ProcrastinationAutopsy() {
   const [whatHelped, setWhatHelped] = useState("");
   const [note, setNote] = useState("");
 
+  const { grantXP } = useXPAward();
   useEffect(() => { setEntries(getProcrastinationEntries()); }, []);
 
   const update = (e: ProcrastinationEntry[]) => { setEntries(e); saveProcrastinationEntries(e); };
@@ -49,6 +52,8 @@ export default function ProcrastinationAutopsy() {
       note: note.trim() || undefined,
     };
     update([entry, ...entries]);
+    const result = grantXP('task', 'Procrastination autopsy logged', 10);
+    notifyXP(result);
     setAvoidedTask(""); setWhatDidInstead(""); setFeelingBefore(""); setFeelingDuring("");
     setTriggerType('unclear'); setDuration(""); setDidEventuallyDo(false); setWhatHelped(""); setNote("");
     setOpen(false);

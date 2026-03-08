@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import XPNotificationLayer from "@/components/XPNotification";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Routines from "./pages/Routines";
@@ -29,6 +30,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <XPNotificationLayer />
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>

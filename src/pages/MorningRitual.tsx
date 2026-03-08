@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Sun, Plus, X, Clock, Zap, Heart, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
-import { getMorningRituals, saveMorningRituals, getEnergyLogs, calculateBiologicalPrimeTime, getTasks, todayStr, generateId, awardXP, type MorningRitual, type RitualTimeBlock, type Task, type BiologicalPrimeTime } from "@/lib/store";
+import { getMorningRituals, saveMorningRituals, getEnergyLogs, calculateBiologicalPrimeTime, getTasks, todayStr, generateId, type MorningRitual, type RitualTimeBlock, type Task, type BiologicalPrimeTime } from "@/lib/store";
+import { useXPAward } from "@/hooks/useXP";
+import { notifyXP } from "@/components/XPNotification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +15,7 @@ const ENERGY_LABELS: Record<string, { label: string; color: string; icon: string
 };
 
 export default function MorningRitualPage() {
+  const { grantXP } = useXPAward();
   const [rituals, setRituals] = useState<MorningRitual[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [primeTime, setPrimeTime] = useState<BiologicalPrimeTime[]>([]);
@@ -90,7 +93,8 @@ export default function MorningRitualPage() {
     const updated = [...rituals.filter(r => r.date !== today), ritual];
     saveMorningRituals(updated);
     setRituals(updated);
-    awardXP('morning-ritual', 'Completed morning ritual');
+    const result = grantXP('morning-ritual', 'Completed morning ritual');
+    notifyXP(result);
     setStep(4);
   };
 
