@@ -1,12 +1,16 @@
-import { LayoutDashboard, CheckCircle2, Activity, BarChart3, Lightbulb } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ListTodo, Timer, ClipboardCheck } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const links = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/tasks", icon: ListTodo, label: "Tasks" },
+  { to: "/goals", icon: Target, label: "Goals" },
   { to: "/routines", icon: CheckCircle2, label: "Routines" },
+  { to: "/focus", icon: Timer, label: "Focus Timer" },
   { to: "/activities", icon: Activity, label: "Activity Log" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/reviews", icon: ClipboardCheck, label: "Weekly Review" },
   { to: "/insights", icon: Lightbulb, label: "Insights" },
 ];
 
@@ -15,7 +19,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card min-h-screen p-6">
       <div className="mb-10">
         <h1 className="text-2xl font-display text-primary tracking-tight">DayFlow</h1>
-        <p className="text-xs text-muted-foreground mt-1">Track · Analyse · Improve</p>
+        <p className="text-xs text-muted-foreground mt-1">Track · Focus · Achieve</p>
       </div>
       <nav className="flex flex-col gap-1 flex-1">
         {links.map(({ to, icon: Icon, label }) => (
