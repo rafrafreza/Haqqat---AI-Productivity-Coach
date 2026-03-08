@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useEffect } from "react";
 import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
+import AICoachWidget from "./AICoachWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import { loadFromCloud, syncToCloud } from "@/lib/cloudSync";
 
@@ -40,6 +41,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <MobileNav />
+      <AICoachWidget />
     </div>
   );
 }
