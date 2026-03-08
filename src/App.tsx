@@ -13,6 +13,11 @@ import Goals from "./pages/Goals";
 import Tasks from "./pages/Tasks";
 import Focus from "./pages/Focus";
 import Reviews from "./pages/Reviews";
+import EnergyMap from "./pages/EnergyMap";
+import DecisionJournal from "./pages/DecisionJournal";
+import ProcrastinationAutopsy from "./pages/ProcrastinationAutopsy";
+import FutureLetters from "./pages/FutureLetters";
+import LifeBalance from "./pages/LifeBalance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +39,11 @@ const App = () => (
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/focus" element={<Focus />} />
             <Route path="/reviews" element={<Reviews />} />
+            <Route path="/energy" element={<EnergyMap />} />
+            <Route path="/decisions" element={<DecisionJournal />} />
+            <Route path="/procrastination" element={<ProcrastinationAutopsy />} />
+            <Route path="/letters" element={<FutureLetters />} />
+            <Route path="/balance" element={<LifeBalance />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
