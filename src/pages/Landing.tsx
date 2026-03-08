@@ -101,7 +101,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <Zap size={24} className="text-primary" />
-            <span className="text-xl font-display text-foreground">DayFlow</span>
+            <span className="text-xl font-display text-foreground">Haqqa</span>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate("/auth")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -182,7 +182,7 @@ export default function Landing() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
           >
-            DayFlow combines task management, habit tracking, energy mapping, and
+            Haqqa combines task management, habit tracking, energy mapping, and
             gamification into one minimal workspace — so you can focus on what matters.
           </motion.p>
 
@@ -318,7 +318,7 @@ export default function Landing() {
               Ready to transform your days?
             </h2>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Join DayFlow and start building the productivity system you've always wanted.
+              Join Haqqa and start building the productivity system you've always wanted.
             </p>
             <motion.button
               whileHover={{ scale: 1.05, boxShadow: "0 10px 30px -10px hsl(var(--primary) / 0.4)" }}
@@ -338,10 +338,10 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Zap size={16} className="text-primary" />
-            <span className="text-sm">DayFlow</span>
+            <span className="text-sm">Haqqa</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} DayFlow. Built for focus.
+            © {new Date().getFullYear()} Haqqa. Built for focus.
           </p>
         </div>
       </footer>
