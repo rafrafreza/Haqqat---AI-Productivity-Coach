@@ -1,7 +1,10 @@
-import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar } from "lucide-react";
+import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar, LogOut, Crown } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { ProBadge, isProFeature } from "@/components/ProGate";
 
 const bottomLinks = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
@@ -49,36 +52,29 @@ export default function MobileNav() {
   const [swipeY, setSwipeY] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startY = useRef(0);
-  const currentY = useRef(0);
+  const { signOut, user } = useAuth();
+  const { isPro } = useSubscription();
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     startY.current = e.touches[0].clientY;
-    currentY.current = startY.current;
     setDragging(true);
     setSwipeY(0);
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!dragging) return;
-    currentY.current = e.touches[0].clientY;
-    const delta = currentY.current - startY.current;
-    // Only allow downward swipe
-    if (delta > 0) {
-      setSwipeY(delta);
-    }
+    const delta = e.touches[0].clientY - startY.current;
+    if (delta > 0) setSwipeY(delta);
   }, [dragging]);
 
   const onTouchEnd = useCallback(() => {
     setDragging(false);
-    if (swipeY > 120) {
-      setOpen(false);
-    }
+    if (swipeY > 120) setOpen(false);
     setSwipeY(0);
   }, [swipeY]);
 
   return (
     <>
-      {/* Full menu overlay */}
       {open && (
         <div
           className="md:hidden fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm animate-fade-in"
@@ -97,37 +93,58 @@ export default function MobileNav() {
               <X size={22} />
             </button>
           </div>
-          <nav className="px-4 py-2 overflow-y-auto max-h-[calc(100vh-120px)]">
+          <nav className="px-4 py-2 overflow-y-auto max-h-[calc(100vh-180px)]">
             {allSections.map(section => (
               <div key={section.title} className="mb-4">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2 px-3">{section.title}</p>
                 <div className="flex flex-col gap-0.5">
-                  {section.links.map(({ to, icon: Icon, label }) => (
-                    <NavLink
-                      key={to}
-                      to={to}
-                      onClick={() => setOpen(false)}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                          isActive
-                            ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                        )
-                      }
-                    >
-                      <Icon size={16} />
-                      {label}
-                    </NavLink>
-                  ))}
+                  {section.links.map(({ to, icon: Icon, label }) => {
+                    const pro = isProFeature(to) && !isPro;
+                    return (
+                      <NavLink
+                        key={to}
+                        to={to}
+                        onClick={() => setOpen(false)}
+                        className={({ isActive }) =>
+                          cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                            isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                          )
+                        }
+                      >
+                        <Icon size={16} />
+                        <span className="flex-1">{label}</span>
+                        {pro && <ProBadge />}
+                      </NavLink>
+                    );
+                  })}
                 </div>
               </div>
             ))}
+            {!isPro && (
+              <NavLink to="/pricing" onClick={() => setOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4">
+                <Crown size={16} />
+                Upgrade to Pro
+              </NavLink>
+            )}
           </nav>
+          <div className="absolute bottom-20 left-0 right-0 px-5 border-t border-border pt-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                {user?.email?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
+                <p className="text-[10px] text-muted-foreground">{isPro ? 'Pro' : 'Free'}</p>
+              </div>
+              <button onClick={signOut} className="p-2 text-muted-foreground hover:text-foreground">
+                <LogOut size={16} />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Bottom bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 flex justify-around py-2 px-1">
         {bottomLinks.map(({ to, icon: Icon, label }) => (
           <NavLink
