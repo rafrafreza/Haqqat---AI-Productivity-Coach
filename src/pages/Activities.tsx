@@ -67,8 +67,8 @@ const Activities = React.forwardRef<HTMLDivElement>(function Activities(_props, 
               <DialogTitle className="font-display text-foreground">Log Activity</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-2">
-              <Input placeholder="What did you do?" value={title} onChange={e => setTitle(e.target.value)} className="bg-secondary border-border" />
-              <Textarea placeholder="Details (optional)" value={description} onChange={e => setDescription(e.target.value)} className="bg-secondary border-border" rows={2} />
+              <Input placeholder="What did you do?" value={title} onChange={e => setTitle(e.target.value)} />
+              <Textarea placeholder="Details (optional)" value={description} onChange={e => setDescription(e.target.value)} rows={2} />
               <div className="flex gap-3">
                 <div className="flex-1">
                   <label className="text-xs text-muted-foreground mb-1 block">Category</label>
@@ -79,7 +79,7 @@ const Activities = React.forwardRef<HTMLDivElement>(function Activities(_props, 
                   </div>
                 </div>
               </div>
-              <Input type="number" placeholder="Duration (minutes)" value={duration} onChange={e => setDuration(e.target.value)} className="bg-secondary border-border" />
+              <Input type="number" placeholder="Duration (minutes)" value={duration} onChange={e => setDuration(e.target.value)} />
               <Button onClick={addActivity} className="w-full gradient-warm text-primary-foreground font-semibold">Log Activity</Button>
             </div>
           </DialogContent>

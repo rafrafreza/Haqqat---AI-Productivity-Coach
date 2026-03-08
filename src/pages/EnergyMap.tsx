@@ -112,8 +112,8 @@ export default function EnergyMap() {
                     <span>Exhausted</span><span>Peak</span>
                   </div>
                 </div>
-                <Input placeholder="What are you doing right now?" value={activity} onChange={e => setActivity(e.target.value)} className="bg-secondary border-border" />
-                <Input placeholder="Any notes? (optional)" value={note} onChange={e => setNote(e.target.value)} className="bg-secondary border-border" />
+                <Input placeholder="What are you doing right now?" value={activity} onChange={e => setActivity(e.target.value)} />
+                <Input placeholder="Any notes? (optional)" value={note} onChange={e => setNote(e.target.value)} />
                 <Button onClick={logEnergy} className="w-full gradient-warm text-primary-foreground font-semibold">Log Energy</Button>
               </div>
             </DialogContent>

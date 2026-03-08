@@ -104,15 +104,15 @@ export default function Goals() {
           <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle className="font-display text-foreground">Set a New Goal</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-2">
-              <Input placeholder="Goal title" value={title} onChange={e => setTitle(e.target.value)} className="bg-secondary border-border" />
-              <Textarea placeholder="Why is this important? (optional)" value={description} onChange={e => setDescription(e.target.value)} className="bg-secondary border-border" rows={2} />
+              <Input placeholder="Goal title" value={title} onChange={e => setTitle(e.target.value)} />
+              <Textarea placeholder="Why is this important? (optional)" value={description} onChange={e => setDescription(e.target.value)} rows={2} />
               <div className="grid grid-cols-2 gap-3">
                 <Select value={category} onValueChange={v => setCategory(v as Goal['category'])}>
-                  <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{goalCategories.map(c => <SelectItem key={c} value={c} className="capitalize">{categoryEmojis[c]} {c}</SelectItem>)}</SelectContent>
                 </Select>
                 <Select value={priority} onValueChange={v => setPriority(v as Goal['priority'])}>
-                  <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="high">🔴 High</SelectItem>
                     <SelectItem value="medium">🟡 Medium</SelectItem>
@@ -120,11 +120,11 @@ export default function Goals() {
                   </SelectContent>
                 </Select>
               </div>
-              <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className="bg-secondary border-border" />
+              <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
               <div>
                 <label className="text-xs text-muted-foreground mb-2 block">Milestones (break it down)</label>
                 <div className="flex gap-2 mb-2">
-                  <Input placeholder="Add a milestone" value={milestoneInput} onChange={e => setMilestoneInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMilestone()} className="bg-secondary border-border" />
+                  <Input placeholder="Add a milestone" value={milestoneInput} onChange={e => setMilestoneInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMilestone()} />
                   <Button variant="outline" onClick={addMilestone} size="sm">Add</Button>
                 </div>
                 {newMilestones.map((m, i) => (
@@ -225,7 +225,7 @@ function MilestoneAdder({ onAdd }: { onAdd: (title: string) => void }) {
   const submit = () => { if (input.trim()) { onAdd(input.trim()); setInput(""); } };
   return (
     <div className="flex gap-2 mt-3">
-      <Input placeholder="Add milestone..." value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className="bg-secondary border-border text-sm h-8" />
+      <Input placeholder="Add milestone..." value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className="text-sm h-8" />
       <Button variant="outline" size="sm" onClick={submit} className="h-8 text-xs">Add</Button>
     </div>
   );

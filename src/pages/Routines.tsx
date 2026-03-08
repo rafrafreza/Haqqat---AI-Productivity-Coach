@@ -53,7 +53,7 @@ export default function Routines() {
               <DialogTitle className="font-display text-foreground">New Routine</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-2">
-              <Input placeholder="Routine name" value={name} onChange={e => setName(e.target.value)} className="bg-secondary border-border" />
+              <Input placeholder="Routine name" value={name} onChange={e => setName(e.target.value)} />
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Icon</label>
                 <div className="flex flex-wrap gap-2">
@@ -63,12 +63,12 @@ export default function Routines() {
                 </div>
               </div>
               <Select value={category} onValueChange={v => setCategory(v as Routine['category'])}>
-                <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {categories.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Input type="time" value={time} onChange={e => setTime(e.target.value)} className="bg-secondary border-border" />
+              <Input type="time" value={time} onChange={e => setTime(e.target.value)} />
               <Button onClick={addRoutine} className="w-full gradient-warm text-primary-foreground font-semibold">Create Routine</Button>
             </div>
           </DialogContent>

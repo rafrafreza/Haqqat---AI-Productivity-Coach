@@ -216,10 +216,10 @@ function PomodoroSettingsForm({ settings, onSave }: { settings: PomodoroSettings
 
   return (
     <div className="space-y-4 mt-2">
-      <div><label className="text-xs text-muted-foreground">Work duration (min)</label><Input type="number" value={work} onChange={e => setWork(e.target.value)} className="bg-secondary border-border" /></div>
-      <div><label className="text-xs text-muted-foreground">Short break (min)</label><Input type="number" value={shortBreak} onChange={e => setShortBreak(e.target.value)} className="bg-secondary border-border" /></div>
-      <div><label className="text-xs text-muted-foreground">Long break (min)</label><Input type="number" value={longBreak} onChange={e => setLongBreak(e.target.value)} className="bg-secondary border-border" /></div>
-      <div><label className="text-xs text-muted-foreground">Sessions before long break</label><Input type="number" value={sessions} onChange={e => setSessions(e.target.value)} className="bg-secondary border-border" /></div>
+      <div><label className="text-xs text-muted-foreground">Work duration (min)</label><Input type="number" value={work} onChange={e => setWork(e.target.value)} /></div>
+      <div><label className="text-xs text-muted-foreground">Short break (min)</label><Input type="number" value={shortBreak} onChange={e => setShortBreak(e.target.value)} /></div>
+      <div><label className="text-xs text-muted-foreground">Long break (min)</label><Input type="number" value={longBreak} onChange={e => setLongBreak(e.target.value)} /></div>
+      <div><label className="text-xs text-muted-foreground">Sessions before long break</label><Input type="number" value={sessions} onChange={e => setSessions(e.target.value)} /></div>
       <Button onClick={() => onSave({ workMinutes: parseInt(work) || 25, shortBreakMinutes: parseInt(shortBreak) || 5, longBreakMinutes: parseInt(longBreak) || 15, sessionsBeforeLongBreak: parseInt(sessions) || 4 })} className="w-full gradient-warm text-primary-foreground font-semibold">Save Settings</Button>
     </div>
   );

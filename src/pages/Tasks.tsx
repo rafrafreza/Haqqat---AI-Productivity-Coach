@@ -94,17 +94,17 @@ export default function Tasks() {
             <DialogContent className="bg-card border-border">
               <DialogHeader><DialogTitle className="font-display text-foreground">New Task</DialogTitle></DialogHeader>
               <div className="space-y-4 mt-2">
-                <Input placeholder="What needs to be done?" value={title} onChange={e => setTitle(e.target.value)} className="bg-secondary border-border" />
-                <Textarea placeholder="Details (optional)" value={description} onChange={e => setDescription(e.target.value)} className="bg-secondary border-border" rows={2} />
+                <Input placeholder="What needs to be done?" value={title} onChange={e => setTitle(e.target.value)} />
+                <Textarea placeholder="Details (optional)" value={description} onChange={e => setDescription(e.target.value)} rows={2} />
                 <Select value={priority} onValueChange={v => setPriority(v as Task['priority'])}>
-                  <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(priorityLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <div className="grid grid-cols-2 gap-3">
-                  <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className="bg-secondary border-border" />
-                  <Input type="number" placeholder="Est. minutes" value={estimatedMinutes} onChange={e => setEstimatedMinutes(e.target.value)} className="bg-secondary border-border" />
+                  <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
+                  <Input type="number" placeholder="Est. minutes" value={estimatedMinutes} onChange={e => setEstimatedMinutes(e.target.value)} />
                 </div>
                 <Button onClick={addTask} className="w-full gradient-warm text-primary-foreground font-semibold">Create Task</Button>
               </div>

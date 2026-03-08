@@ -95,11 +95,11 @@ export default function FutureLetters() {
           <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle className="font-display text-foreground">💌 Dear Future Me...</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-2">
-              <Input placeholder="Subject line" value={subject} onChange={e => setSubject(e.target.value)} className="bg-secondary border-border" />
+              <Input placeholder="Subject line" value={subject} onChange={e => setSubject(e.target.value)} />
 
               <div>
                 <label className="text-xs text-muted-foreground mb-2 block">Open this letter on:</label>
-                <Input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)} className="bg-secondary border-border" />
+                <Input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)} />
               </div>
 
               <div>
@@ -113,12 +113,12 @@ export default function FutureLetters() {
                 </div>
               </div>
 
-              <Textarea placeholder="Write to your future self... What's happening now? What are you working on? What are you worried about? What advice do you have?" value={content} onChange={e => setContent(e.target.value)} className="bg-secondary border-border" rows={6} />
+              <Textarea placeholder="Write to your future self... What's happening now? What are you working on? What are you worried about? What advice do you have?" value={content} onChange={e => setContent(e.target.value)} rows={6} />
 
               <div>
                 <label className="text-xs text-muted-foreground mb-2 block">🔮 Predictions (optional — test your self-knowledge)</label>
                 <div className="flex gap-2 mb-2">
-                  <Input placeholder="I predict that..." value={predictionText} onChange={e => setPredictionText(e.target.value)} onKeyDown={e => e.key === 'Enter' && addPrediction()} className="bg-secondary border-border" />
+                  <Input placeholder="I predict that..." value={predictionText} onChange={e => setPredictionText(e.target.value)} onKeyDown={e => e.key === 'Enter' && addPrediction()} />
                   <Button variant="outline" size="sm" onClick={addPrediction}>Add</Button>
                 </div>
                 {predictionText && (
@@ -237,7 +237,7 @@ export default function FutureLetters() {
 
                       {!l.reflection ? (
                         <div className="space-y-2">
-                          <Textarea placeholder="Reflect: How does this letter make you feel? Were you right about your predictions? What's changed?" value={reflection} onChange={e => setReflection(e.target.value)} className="bg-secondary border-border" rows={3} />
+                          <Textarea placeholder="Reflect: How does this letter make you feel? Were you right about your predictions? What's changed?" value={reflection} onChange={e => setReflection(e.target.value)} rows={3} />
                           <Button onClick={() => saveReflection(l.id)} size="sm" variant="outline">Save Reflection</Button>
                         </div>
                       ) : (
