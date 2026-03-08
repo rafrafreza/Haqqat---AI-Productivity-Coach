@@ -102,6 +102,77 @@ export interface TimeBlock {
   taskId?: string;
 }
 
+// ===== UNIQUE FEATURE TYPES =====
+
+export interface EnergyLog {
+  id: string;
+  date: string;
+  hour: number; // 0-23
+  level: number; // 1-10
+  activity?: string;
+  category?: string; // what type of work was being done
+  note?: string;
+}
+
+export interface BiologicalPrimeTime {
+  hour: number;
+  avgEnergy: number;
+  sampleCount: number;
+  bestFor: 'deep-work' | 'creative' | 'admin' | 'social' | 'rest';
+}
+
+export interface Decision {
+  id: string;
+  date: string;
+  title: string;
+  context: string; // situation
+  options: string[]; // what options were considered
+  chosen: string; // what was decided
+  reasoning: string; // why
+  confidence: number; // 1-10 how confident
+  expectedOutcome: string;
+  actualOutcome?: string;
+  outcomeDate?: string;
+  outcomeScore?: number; // 1-10 how well it turned out
+  lessonLearned?: string;
+  category: 'career' | 'health' | 'financial' | 'relationship' | 'personal' | 'other';
+  revisitDate: string; // when to check back
+  status: 'pending' | 'reviewed';
+}
+
+export interface ProcrastinationEntry {
+  id: string;
+  date: string;
+  avoidedTask: string;
+  whatDidInstead: string;
+  feelingBefore: string; // emotion tag
+  feelingDuring: string;
+  triggerType: 'fear-of-failure' | 'perfectionism' | 'overwhelm' | 'boring' | 'unclear' | 'too-big' | 'anxiety' | 'low-energy' | 'distraction' | 'other';
+  duration: number; // how long procrastinated in minutes
+  didEventuallyDo: boolean;
+  whatHelped?: string;
+  note?: string;
+}
+
+export interface FutureLetter {
+  id: string;
+  writtenDate: string;
+  deliveryDate: string; // when to reveal
+  subject: string;
+  content: string; // the letter
+  predictions: Prediction[];
+  mood: string;
+  isRevealed: boolean;
+  reflection?: string; // written after reveal
+}
+
+export interface Prediction {
+  id: string;
+  text: string;
+  confidence: number; // 1-10
+  wasAccurate?: boolean; // set after reveal
+}
+
 // ===== STORAGE =====
 
 const KEYS = {
@@ -114,6 +185,10 @@ const KEYS = {
   weeklyReviews: 'dayflow_weekly_reviews',
   dailyPlans: 'dayflow_daily_plans',
   pomodoroSettings: 'dayflow_pomodoro_settings',
+  energyLogs: 'dayflow_energy_logs',
+  decisions: 'dayflow_decisions',
+  procrastination: 'dayflow_procrastination',
+  futureLetters: 'dayflow_future_letters',
 } as const;
 
 function load<T>(key: string, fallback: T): T {
@@ -180,6 +255,18 @@ export const saveDailyPlans = (data: DailyPlan[]) => save(KEYS.dailyPlans, data)
 
 export const getPomodoroSettings = () => load(KEYS.pomodoroSettings, defaultPomodoroSettings);
 export const savePomodoroSettings = (data: PomodoroSettings) => save(KEYS.pomodoroSettings, data);
+
+export const getEnergyLogs = () => load<EnergyLog[]>(KEYS.energyLogs, []);
+export const saveEnergyLogs = (data: EnergyLog[]) => save(KEYS.energyLogs, data);
+
+export const getDecisions = () => load<Decision[]>(KEYS.decisions, []);
+export const saveDecisions = (data: Decision[]) => save(KEYS.decisions, data);
+
+export const getProcrastinationEntries = () => load<ProcrastinationEntry[]>(KEYS.procrastination, []);
+export const saveProcrastinationEntries = (data: ProcrastinationEntry[]) => save(KEYS.procrastination, data);
+
+export const getFutureLetters = () => load<FutureLetter[]>(KEYS.futureLetters, []);
+export const saveFutureLetters = (data: FutureLetter[]) => save(KEYS.futureLetters, data);
 
 // ===== UTILITIES =====
 
@@ -312,4 +399,122 @@ export function getWeekStart(date: Date = new Date()): string {
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   d.setDate(diff);
   return d.toISOString().slice(0, 10);
+}
+
+// ===== ENERGY MAPPING HELPERS =====
+
+export function calculateBiologicalPrimeTime(logs: EnergyLog[]): BiologicalPrimeTime[] {
+  const hourMap: Record<number, { total: number; count: number; categories: Record<string, number> }> = {};
+
+  for (let h = 0; h < 24; h++) {
+    hourMap[h] = { total: 0, count: 0, categories: {} };
+  }
+
+  logs.forEach(l => {
+    hourMap[l.hour].total += l.level;
+    hourMap[l.hour].count++;
+    if (l.category) {
+      hourMap[l.hour].categories[l.category] = (hourMap[l.hour].categories[l.category] || 0) + l.level;
+    }
+  });
+
+  return Object.entries(hourMap).map(([hour, data]) => {
+    const h = parseInt(hour);
+    const avg = data.count > 0 ? Math.round((data.total / data.count) * 10) / 10 : 0;
+    
+    // Determine best work type based on energy level
+    let bestFor: BiologicalPrimeTime['bestFor'] = 'rest';
+    if (avg >= 8) bestFor = 'deep-work';
+    else if (avg >= 6) bestFor = 'creative';
+    else if (avg >= 4) bestFor = 'admin';
+    else if (avg >= 2) bestFor = 'social';
+
+    return { hour: h, avgEnergy: avg, sampleCount: data.count, bestFor };
+  });
+}
+
+export function getDecisionAccuracy(decisions: Decision[]): number {
+  const reviewed = decisions.filter(d => d.status === 'reviewed' && d.outcomeScore !== undefined);
+  if (reviewed.length === 0) return 0;
+  
+  // Compare confidence vs outcome
+  const accurateDecisions = reviewed.filter(d => {
+    const confidenceNorm = d.confidence / 10;
+    const outcomeNorm = (d.outcomeScore || 5) / 10;
+    return Math.abs(confidenceNorm - outcomeNorm) < 0.3; // within 30%
+  });
+  
+  return Math.round((accurateDecisions.length / reviewed.length) * 100);
+}
+
+export function getProcrastinationPatterns(entries: ProcrastinationEntry[]): Record<string, number> {
+  const patterns: Record<string, number> = {};
+  entries.forEach(e => {
+    patterns[e.triggerType] = (patterns[e.triggerType] || 0) + 1;
+  });
+  return patterns;
+}
+
+export function getLifeBalanceScores(): Record<string, number> {
+  const activities = getActivities();
+  const tasks = getTasks();
+  const routines = getRoutines();
+  const logs = getLogs();
+  const sessions = getFocusSessions();
+  const goals = getGoals();
+
+  // Calculate scores for each life dimension (0-100)
+  const dimensions: Record<string, number> = {
+    'Career': 0,
+    'Health': 0,
+    'Learning': 0,
+    'Relationships': 0,
+    'Creativity': 0,
+    'Finance': 0,
+    'Mindfulness': 0,
+    'Rest': 0,
+  };
+
+  // From activities (last 14 days)
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  const recentActivities = activities.filter(a => a.date >= twoWeeksAgo.toISOString().slice(0, 10));
+  
+  const catMapping: Record<string, string> = {
+    'Work': 'Career', 'Learning': 'Learning', 'Health': 'Health',
+    'Personal': 'Mindfulness', 'Social': 'Relationships', 'Creative': 'Creativity', 'Other': 'Rest',
+  };
+
+  const totalMins = recentActivities.reduce((s, a) => s + (a.duration || 30), 0) || 1;
+  recentActivities.forEach(a => {
+    const dim = catMapping[a.category] || 'Rest';
+    dimensions[dim] += ((a.duration || 30) / totalMins) * 60;
+  });
+
+  // From routines completion (last 7 days)
+  const healthRoutines = routines.filter(r => r.category === 'health');
+  if (healthRoutines.length > 0) {
+    const healthRate = healthRoutines.reduce((s, r) => s + getCompletionRate(r.id, logs, 7), 0) / healthRoutines.length;
+    dimensions['Health'] += healthRate * 0.4;
+  }
+
+  // From goals
+  const activeGoals = goals.filter(g => g.status === 'active');
+  const goalCatMap: Record<string, string> = { career: 'Career', health: 'Health', learning: 'Learning', personal: 'Mindfulness', financial: 'Finance' };
+  activeGoals.forEach(g => {
+    const dim = goalCatMap[g.category] || 'Mindfulness';
+    const progress = getGoalProgress(g);
+    dimensions[dim] += progress * 0.2;
+  });
+
+  // From focus sessions
+  const weekFocus = getWeekFocusMinutes(sessions);
+  dimensions['Career'] += Math.min(weekFocus / 600 * 30, 30);
+
+  // Cap all at 100
+  Object.keys(dimensions).forEach(k => {
+    dimensions[k] = Math.min(Math.round(dimensions[k]), 100);
+  });
+
+  return dimensions;
 }
