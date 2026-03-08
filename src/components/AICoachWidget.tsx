@@ -216,7 +216,7 @@ export default function AICoachWidget() {
     return (
       <button
         onClick={() => { setOpen(true); if (messages.length === 0 && !loading) getInitialCoaching(); }}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all group"
+        className="fixed bottom-20 md:bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all group"
       >
         <Bot size={20} />
         <span className="text-sm font-medium hidden sm:inline">AI Coach</span>
