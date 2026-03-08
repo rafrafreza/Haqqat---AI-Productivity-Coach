@@ -18,6 +18,9 @@ import DecisionJournal from "./pages/DecisionJournal";
 import ProcrastinationAutopsy from "./pages/ProcrastinationAutopsy";
 import FutureLetters from "./pages/FutureLetters";
 import LifeBalance from "./pages/LifeBalance";
+import Gamification from "./pages/Gamification";
+import MorningRitual from "./pages/MorningRitual";
+import NotFound from "./pages/NotFound";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +47,8 @@ const App = () => (
             <Route path="/procrastination" element={<ProcrastinationAutopsy />} />
             <Route path="/letters" element={<FutureLetters />} />
             <Route path="/balance" element={<LifeBalance />} />
+            <Route path="/xp" element={<Gamification />} />
+            <Route path="/ritual" element={<MorningRitual />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

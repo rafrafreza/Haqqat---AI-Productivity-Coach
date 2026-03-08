@@ -1,4 +1,4 @@
-import { LayoutDashboard, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ListTodo, Timer, ClipboardCheck, Battery, Scale, Search, Mail, Radar } from "lucide-react";
+import { LayoutDashboard, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ListTodo, Timer, ClipboardCheck, Battery, Scale, Search, Mail, Radar, Trophy, Sun } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +7,7 @@ const sections = [
     title: "Core",
     links: [
       { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+      { to: "/ritual", icon: Sun, label: "Morning Ritual" },
       { to: "/tasks", icon: ListTodo, label: "Tasks" },
       { to: "/goals", icon: Target, label: "Goals" },
       { to: "/routines", icon: CheckCircle2, label: "Routines" },
@@ -24,8 +25,9 @@ const sections = [
     ],
   },
   {
-    title: "Analyse",
+    title: "Progress",
     links: [
+      { to: "/xp", icon: Trophy, label: "Level Up" },
       { to: "/activities", icon: Activity, label: "Activity Log" },
       { to: "/analytics", icon: BarChart3, label: "Analytics" },
       { to: "/reviews", icon: ClipboardCheck, label: "Weekly Review" },
