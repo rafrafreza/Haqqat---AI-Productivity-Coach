@@ -91,7 +91,7 @@ export default function MobileNav() {
           }}
         >
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
-            <h2 className="text-lg font-display text-primary">DayFlow</h2>
+            <h2 className="text-lg font-display text-primary">Haqqa</h2>
             <button onClick={() => setOpen(false)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground">
               <X size={22} />
             </button>
