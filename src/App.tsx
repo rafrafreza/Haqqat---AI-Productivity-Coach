@@ -27,7 +27,8 @@ import Gamification from "./pages/Gamification";
 import MorningRitual from "./pages/MorningRitual";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
-
+import Landing from "./pages/Landing";
+import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -36,47 +37,59 @@ const queryClient = new QueryClient();
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/landing" replace />;
   return <>{children}</>;
 }
 
+function OnboardingGuard({ children }: { children: React.ReactNode }) {
+  const onboarded = localStorage.getItem("dayflow_onboarded");
+  if (!onboarded) return <Navigate to="/onboarding" replace />;
+  return <>{children}</>;
+}
+
+function PublicOnly({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (user) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        
-          <Toaster />
-          <Sonner />
-          <XPNotificationLayer />
-          <ConfettiLayer />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/ritual" element={<MorningRitual />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/goals" element={<Goals />} />
-                <Route path="/routines" element={<Routines />} />
-                <Route path="/focus" element={<Focus />} />
-                <Route path="/reviews" element={<Reviews />} />
-                <Route path="/activities" element={<Activities />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/energy" element={<EnergyMap />} />
-                <Route path="/decisions" element={<DecisionJournal />} />
-                <Route path="/procrastination" element={<ProcrastinationAutopsy />} />
-                <Route path="/letters" element={<FutureLetters />} />
-                <Route path="/balance" element={<LifeBalance />} />
-                <Route path="/xp" element={<Gamification />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/insights" element={<Insights />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        
+        <Toaster />
+        <Sonner />
+        <XPNotificationLayer />
+        <ConfettiLayer />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/landing" element={<PublicOnly><Landing /></PublicOnly>} />
+            <Route path="/auth" element={<PublicOnly><Auth /></PublicOnly>} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route element={<ProtectedRoute><OnboardingGuard><Layout /></OnboardingGuard></ProtectedRoute>}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/ritual" element={<MorningRitual />} />
+              <Route path="/tasks" element={<Tasks />} />
+              <Route path="/goals" element={<Goals />} />
+              <Route path="/routines" element={<Routines />} />
+              <Route path="/focus" element={<Focus />} />
+              <Route path="/reviews" element={<Reviews />} />
+              <Route path="/activities" element={<Activities />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/energy" element={<EnergyMap />} />
+              <Route path="/decisions" element={<DecisionJournal />} />
+              <Route path="/procrastination" element={<ProcrastinationAutopsy />} />
+              <Route path="/letters" element={<FutureLetters />} />
+              <Route path="/balance" element={<LifeBalance />} />
+              <Route path="/xp" element={<Gamification />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/insights" element={<Insights />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
