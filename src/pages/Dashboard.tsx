@@ -43,6 +43,7 @@ export default function Dashboard() {
       const result = grantXP('routine', 'Completed routine');
       notifyXP(result);
     }
+  };
 
   const isCompleted = (routineId: string) =>
     logs.some(l => l.date === today && l.routineId === routineId && l.completed);
