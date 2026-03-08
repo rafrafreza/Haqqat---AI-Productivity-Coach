@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import XPNotificationLayer from "@/components/XPNotification";
+import ConfettiLayer from "@/components/Confetti";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Routines from "./pages/Routines";
@@ -31,6 +32,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <XPNotificationLayer />
+      <ConfettiLayer />
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
