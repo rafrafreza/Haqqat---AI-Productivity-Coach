@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Bot, Sparkles, RefreshCw, X, Send } from "lucide-react";
+import { Bot, Sparkles, RefreshCw, X, Send, ShieldAlert } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 import {
@@ -10,6 +10,30 @@ import {
   getGamificationStats, getXPEvents
 } from "@/lib/store";
 
+const DAILY_LIMIT = 10;
+const LIMIT_KEY = "haqqat_ai_coach_usage";
+
+function getDailyUsage(): { date: string; count: number } {
+  try {
+    const raw = localStorage.getItem(LIMIT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.date === todayStr()) return parsed;
+    }
+  } catch {}
+  return { date: todayStr(), count: 0 };
+}
+
+function incrementDailyUsage() {
+  const usage = getDailyUsage();
+  usage.count += 1;
+  usage.date = todayStr();
+  localStorage.setItem(LIMIT_KEY, JSON.stringify(usage));
+}
+
+function getRemainingMessages(): number {
+  return Math.max(0, DAILY_LIMIT - getDailyUsage().count);
+}
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -149,7 +173,13 @@ export default function AICoachWidget() {
     }
   }, [messages]);
 
+  const remaining = getRemainingMessages();
+
   const getInitialCoaching = useCallback(async () => {
+    if (getRemainingMessages() <= 0) {
+      setError("You've reached your daily AI Coach limit (10 messages). Come back tomorrow! 🌅");
+      return;
+    }
     setLoading(true);
     setError("");
     setMessages([]);
@@ -157,6 +187,7 @@ export default function AICoachWidget() {
 
     try {
       let finalContent = "";
+      incrementDailyUsage();
       await streamFromCoach(
         { userData, mode: "initial" },
         (accumulated) => {
@@ -177,6 +208,10 @@ export default function AICoachWidget() {
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || loading) return;
+    if (getRemainingMessages() <= 0) {
+      setError("You've reached your daily AI Coach limit (10 messages). Come back tomorrow! 🌅");
+      return;
+    }
 
     const userMsg: Message = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMsg];
@@ -186,6 +221,7 @@ export default function AICoachWidget() {
     setError("");
 
     const userData = gatherUserData();
+    incrementDailyUsage();
 
     try {
       let assistantContent = "";
@@ -234,6 +270,7 @@ export default function AICoachWidget() {
         <div className="flex items-center gap-2">
           <Bot size={18} className="text-primary" />
           <span className="font-semibold text-sm text-foreground">AI Coach</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{remaining} left</span>
         </div>
         <div className="flex items-center gap-1">
           <button
