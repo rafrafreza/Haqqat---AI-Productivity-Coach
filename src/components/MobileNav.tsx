@@ -1,7 +1,7 @@
 import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 
 const bottomLinks = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
@@ -46,12 +46,51 @@ const allSections = [
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [swipeY, setSwipeY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startY = useRef(0);
+  const currentY = useRef(0);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    startY.current = e.touches[0].clientY;
+    currentY.current = startY.current;
+    setDragging(true);
+    setSwipeY(0);
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragging) return;
+    currentY.current = e.touches[0].clientY;
+    const delta = currentY.current - startY.current;
+    // Only allow downward swipe
+    if (delta > 0) {
+      setSwipeY(delta);
+    }
+  }, [dragging]);
+
+  const onTouchEnd = useCallback(() => {
+    setDragging(false);
+    if (swipeY > 120) {
+      setOpen(false);
+    }
+    setSwipeY(0);
+  }, [swipeY]);
 
   return (
     <>
       {/* Full menu overlay */}
       {open && (
-        <div className="md:hidden fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm animate-fade-in">
+        <div
+          className="md:hidden fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm animate-fade-in"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={{
+            transform: swipeY > 0 ? `translateY(${swipeY}px)` : undefined,
+            opacity: swipeY > 0 ? Math.max(0, 1 - swipeY / 300) : 1,
+            transition: dragging ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
+          }}
+        >
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
             <h2 className="text-lg font-display text-primary">DayFlow</h2>
             <button onClick={() => setOpen(false)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground">
