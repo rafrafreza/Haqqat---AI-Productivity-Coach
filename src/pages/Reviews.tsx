@@ -98,7 +98,7 @@ export default function Reviews() {
               {/* Next week */}
               <ListInput label="🎯 Next week priorities" placeholder="Top priority" items={priorities} onAdd={() => addItem(prioritiesInput, setPrioritiesInput, priorities, setPriorities)} input={prioritiesInput} setInput={setPrioritiesInput} onRemove={(i) => setPriorities(priorities.filter((_, j) => j !== i))} />
 
-              <Textarea placeholder="Additional notes..." value={notes} onChange={e => setNotes(e.target.value)} className="bg-secondary border-border" rows={3} />
+              <Textarea placeholder="Additional notes..." value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
               <Button onClick={submitReview} className="w-full gradient-warm text-primary-foreground font-semibold">Submit Review</Button>
             </div>
           </DialogContent>
@@ -205,7 +205,7 @@ function ListInput({ label, placeholder, items, onAdd, input, setInput, onRemove
     <div>
       <label className="text-sm text-foreground mb-2 block">{label}</label>
       <div className="flex gap-2 mb-2">
-        <Input placeholder={placeholder} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} className="bg-secondary border-border" />
+        <Input placeholder={placeholder} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} />
         <Button variant="outline" size="sm" onClick={onAdd}>Add</Button>
       </div>
       {items.map((item, i) => (

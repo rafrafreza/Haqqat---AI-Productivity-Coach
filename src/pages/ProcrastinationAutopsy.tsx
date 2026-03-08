@@ -83,8 +83,8 @@ export default function ProcrastinationAutopsy() {
           <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle className="font-display text-foreground">🔍 Autopsy Report</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-2">
-              <Input placeholder="What task did you avoid?" value={avoidedTask} onChange={e => setAvoidedTask(e.target.value)} className="bg-secondary border-border" />
-              <Input placeholder="What did you do instead?" value={whatDidInstead} onChange={e => setWhatDidInstead(e.target.value)} className="bg-secondary border-border" />
+              <Input placeholder="What task did you avoid?" value={avoidedTask} onChange={e => setAvoidedTask(e.target.value)} />
+              <Input placeholder="What did you do instead?" value={whatDidInstead} onChange={e => setWhatDidInstead(e.target.value)} />
 
               <div>
                 <label className="text-xs text-muted-foreground mb-2 block">How did you feel BEFORE avoiding?</label>
@@ -116,7 +116,7 @@ export default function ProcrastinationAutopsy() {
                 </div>
               </div>
 
-              <Input type="number" placeholder="How long did you procrastinate? (minutes)" value={duration} onChange={e => setDuration(e.target.value)} className="bg-secondary border-border" />
+              <Input type="number" placeholder="How long did you procrastinate? (minutes)" value={duration} onChange={e => setDuration(e.target.value)} />
 
               <div className="flex items-center gap-3">
                 <button onClick={() => setDidEventuallyDo(!didEventuallyDo)} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition ${didEventuallyDo ? 'bg-success/10 text-success border border-success/30' : 'bg-secondary text-muted-foreground border border-transparent'}`}>
@@ -124,9 +124,9 @@ export default function ProcrastinationAutopsy() {
                 </button>
               </div>
 
-              {didEventuallyDo && <Input placeholder="What helped you start?" value={whatHelped} onChange={e => setWhatHelped(e.target.value)} className="bg-secondary border-border" />}
+              {didEventuallyDo && <Input placeholder="What helped you start?" value={whatHelped} onChange={e => setWhatHelped(e.target.value)} />}
 
-              <Textarea placeholder="Any other reflections?" value={note} onChange={e => setNote(e.target.value)} className="bg-secondary border-border" rows={2} />
+              <Textarea placeholder="Any other reflections?" value={note} onChange={e => setNote(e.target.value)} rows={2} />
               <Button onClick={addEntry} className="w-full gradient-warm text-primary-foreground font-semibold">Save Autopsy</Button>
             </div>
           </DialogContent>

@@ -96,12 +96,12 @@ export default function DecisionJournal() {
           <DialogContent className="bg-card border-border max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle className="font-display text-foreground">Record a Decision</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-2">
-              <Input placeholder="What decision did you make?" value={title} onChange={e => setTitle(e.target.value)} className="bg-secondary border-border" />
-              <Textarea placeholder="What's the situation? (context)" value={context} onChange={e => setContext(e.target.value)} className="bg-secondary border-border" rows={2} />
+              <Input placeholder="What decision did you make?" value={title} onChange={e => setTitle(e.target.value)} />
+              <Textarea placeholder="What's the situation? (context)" value={context} onChange={e => setContext(e.target.value)} rows={2} />
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Options considered</label>
                 <div className="flex gap-2 mb-2">
-                  <Input placeholder="Add an option" value={optionsInput} onChange={e => setOptionsInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && optionsInput.trim()) { setOptions([...options, optionsInput.trim()]); setOptionsInput(""); }}} className="bg-secondary border-border" />
+                  <Input placeholder="Add an option" value={optionsInput} onChange={e => setOptionsInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && optionsInput.trim()) { setOptions([...options, optionsInput.trim()]); setOptionsInput(""); }}} />
                   <Button variant="outline" size="sm" onClick={() => { if (optionsInput.trim()) { setOptions([...options, optionsInput.trim()]); setOptionsInput(""); }}}>Add</Button>
                 </div>
                 {options.map((o, i) => (
@@ -113,8 +113,8 @@ export default function DecisionJournal() {
                   </div>
                 ))}
               </div>
-              {!chosen && options.length > 0 && <Input placeholder="Or type your chosen option" value={chosen} onChange={e => setChosen(e.target.value)} className="bg-secondary border-border" />}
-              <Textarea placeholder="Why did you choose this? (your reasoning)" value={reasoning} onChange={e => setReasoning(e.target.value)} className="bg-secondary border-border" rows={3} />
+              {!chosen && options.length > 0 && <Input placeholder="Or type your chosen option" value={chosen} onChange={e => setChosen(e.target.value)} />}
+              <Textarea placeholder="Why did you choose this? (your reasoning)" value={reasoning} onChange={e => setReasoning(e.target.value)} rows={3} />
               <div>
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-foreground">Confidence Level</span>
@@ -123,14 +123,14 @@ export default function DecisionJournal() {
                 <Slider value={[confidence]} onValueChange={([v]) => setConfidence(v)} min={1} max={10} step={1} />
                 <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>Gut feeling</span><span>Certain</span></div>
               </div>
-              <Textarea placeholder="What outcome do you expect?" value={expectedOutcome} onChange={e => setExpectedOutcome(e.target.value)} className="bg-secondary border-border" rows={2} />
+              <Textarea placeholder="What outcome do you expect?" value={expectedOutcome} onChange={e => setExpectedOutcome(e.target.value)} rows={2} />
               <div className="grid grid-cols-2 gap-3">
                 <Select value={category} onValueChange={v => setCategory(v as Decision['category'])}>
-                  <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{categories.map(c => <SelectItem key={c} value={c}>{categoryEmojis[c]} {c}</SelectItem>)}</SelectContent>
                 </Select>
                 <div>
-                  <Input type="number" placeholder="Revisit in days" value={revisitDays} onChange={e => setRevisitDays(e.target.value)} className="bg-secondary border-border" />
+                  <Input type="number" placeholder="Revisit in days" value={revisitDays} onChange={e => setRevisitDays(e.target.value)} />
                 </div>
               </div>
               <Button onClick={addDecision} className="w-full gradient-warm text-primary-foreground font-semibold">Record Decision</Button>
@@ -220,7 +220,7 @@ export default function DecisionJournal() {
 
                   {isReviewing && (
                     <div className="bg-secondary/50 rounded-lg p-4 space-y-4">
-                      <Textarea placeholder="What actually happened?" value={actualOutcome} onChange={e => setActualOutcome(e.target.value)} className="bg-secondary border-border" rows={2} />
+                      <Textarea placeholder="What actually happened?" value={actualOutcome} onChange={e => setActualOutcome(e.target.value)} rows={2} />
                       <div>
                         <div className="flex justify-between mb-2">
                           <span className="text-sm text-foreground">How well did it turn out?</span>
@@ -228,7 +228,7 @@ export default function DecisionJournal() {
                         </div>
                         <Slider value={[outcomeScore]} onValueChange={([v]) => setOutcomeScore(v)} min={1} max={10} step={1} />
                       </div>
-                      <Input placeholder="Key lesson learned (optional)" value={lessonLearned} onChange={e => setLessonLearned(e.target.value)} className="bg-secondary border-border" />
+                      <Input placeholder="Key lesson learned (optional)" value={lessonLearned} onChange={e => setLessonLearned(e.target.value)} />
                       <div className="flex gap-2">
                         <Button onClick={() => reviewDecision(d.id)} className="gradient-warm text-primary-foreground font-semibold">Save Review</Button>
                         <Button variant="outline" onClick={() => setReviewOpen(null)}>Cancel</Button>
