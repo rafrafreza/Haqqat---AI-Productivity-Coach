@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { Mail, Lock, User, Chrome, Apple, Eye, EyeOff, Zap } from "lucide-react";
+import { Mail, Lock, User, Chrome, Apple, Eye, EyeOff } from "lucide-react";
+import HaqqatLogo from "@/components/HaqqatLogo";
 
 export default function Auth() {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
@@ -70,10 +71,10 @@ export default function Auth() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-2">
-            <Zap size={28} className="text-primary" />
+            <HaqqatLogo size={28} />
             <h1 className="text-3xl font-display text-foreground">Haqqat</h1>
           </div>
-          <p className="text-sm text-muted-foreground">Track · Focus · Achieve</p>
+          <p className="text-sm text-muted-foreground">Align · Build · Evolve</p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
