@@ -31,7 +31,7 @@ export default function ResetPassword() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-2">
             <Zap size={28} className="text-primary" />
-            <h1 className="text-3xl font-display text-foreground">Haqqa</h1>
+            <h1 className="text-3xl font-display text-foreground">Haqqat</h1>
           </div>
         </div>
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">

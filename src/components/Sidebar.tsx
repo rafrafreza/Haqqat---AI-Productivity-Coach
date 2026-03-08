@@ -51,7 +51,7 @@ export default function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card min-h-screen p-6 overflow-y-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-display text-primary tracking-tight">Haqqa</h1>
+        <h1 className="text-2xl font-display text-primary tracking-tight">Haqqat</h1>
         <p className="text-xs text-muted-foreground mt-1">Track · Focus · Achieve</p>
       </div>
       <nav className="flex flex-col gap-6 flex-1">
