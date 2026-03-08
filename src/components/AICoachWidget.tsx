@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Bot, Sparkles, RefreshCw, X, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
 
 import {
   getRoutines, getLogs, getTasks, getFocusSessions, getGoals,
@@ -76,13 +77,22 @@ async function streamFromCoach(
   onError: (msg: string) => void,
   onRemaining?: (n: number) => void,
 ) {
+  // Get the user's actual JWT token
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+  if (!accessToken) {
+    onError("You must be logged in to use the AI Coach.");
+    return;
+  }
+
   const resp = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${accessToken}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
       body: JSON.stringify(body),
     }
