@@ -270,6 +270,7 @@ export default function AICoachWidget() {
         <div className="flex items-center gap-2">
           <Bot size={18} className="text-primary" />
           <span className="font-semibold text-sm text-foreground">AI Coach</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{remaining} left</span>
         </div>
         <div className="flex items-center gap-1">
           <button
