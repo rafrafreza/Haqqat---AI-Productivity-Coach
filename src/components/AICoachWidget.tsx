@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Bot, Sparkles, RefreshCw, X, Send, ShieldAlert } from "lucide-react";
+import { Bot, Sparkles, RefreshCw, X, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 import {
@@ -9,31 +9,6 @@ import {
   getOverdueTasks, getDueSoonTasks, getTodayFocusMinutes,
   getGamificationStats, getXPEvents
 } from "@/lib/store";
-
-const DAILY_LIMIT = 10;
-const LIMIT_KEY = "haqqat_ai_coach_usage";
-
-function getDailyUsage(): { date: string; count: number } {
-  try {
-    const raw = localStorage.getItem(LIMIT_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.date === todayStr()) return parsed;
-    }
-  } catch {}
-  return { date: todayStr(), count: 0 };
-}
-
-function incrementDailyUsage() {
-  const usage = getDailyUsage();
-  usage.count += 1;
-  usage.date = todayStr();
-  localStorage.setItem(LIMIT_KEY, JSON.stringify(usage));
-}
-
-function getRemainingMessages(): number {
-  return Math.max(0, DAILY_LIMIT - getDailyUsage().count);
-}
 
 type Message = { role: "user" | "assistant"; content: string };
 
