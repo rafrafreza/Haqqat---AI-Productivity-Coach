@@ -21,7 +21,6 @@ import LifeBalance from "./pages/LifeBalance";
 import Gamification from "./pages/Gamification";
 import MorningRitual from "./pages/MorningRitual";
 import NotFound from "./pages/NotFound";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
