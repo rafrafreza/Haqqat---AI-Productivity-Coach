@@ -1,7 +1,7 @@
 import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 
 const bottomLinks = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
@@ -46,8 +46,35 @@ const allSections = [
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [swipeY, setSwipeY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startY = useRef(0);
+  const currentY = useRef(0);
 
-  return (
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    startY.current = e.touches[0].clientY;
+    currentY.current = startY.current;
+    setDragging(true);
+    setSwipeY(0);
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragging) return;
+    currentY.current = e.touches[0].clientY;
+    const delta = currentY.current - startY.current;
+    // Only allow downward swipe
+    if (delta > 0) {
+      setSwipeY(delta);
+    }
+  }, [dragging]);
+
+  const onTouchEnd = useCallback(() => {
+    setDragging(false);
+    if (swipeY > 120) {
+      setOpen(false);
+    }
+    setSwipeY(0);
+  }, [swipeY]);
     <>
       {/* Full menu overlay */}
       {open && (
