@@ -37,6 +37,7 @@ export default function ProcrastinationAutopsy() {
   const [whatHelped, setWhatHelped] = useState("");
   const [note, setNote] = useState("");
 
+  const { grantXP } = useXPAward();
   useEffect(() => { setEntries(getProcrastinationEntries()); }, []);
 
   const update = (e: ProcrastinationEntry[]) => { setEntries(e); saveProcrastinationEntries(e); };
@@ -51,6 +52,8 @@ export default function ProcrastinationAutopsy() {
       note: note.trim() || undefined,
     };
     update([entry, ...entries]);
+    const result = grantXP('task', 'Procrastination autopsy logged', 10);
+    notifyXP(result);
     setAvoidedTask(""); setWhatDidInstead(""); setFeelingBefore(""); setFeelingDuring("");
     setTriggerType('unclear'); setDuration(""); setDidEventuallyDo(false); setWhatHelped(""); setNote("");
     setOpen(false);
