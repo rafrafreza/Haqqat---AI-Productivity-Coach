@@ -17,37 +17,9 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
 export const useSubscription = () => useContext(SubscriptionContext);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const [plan, setPlan] = useState<"free" | "pro">("free");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) {
-      setPlan("free");
-      setLoading(false);
-      return;
-    }
-
-    const fetchPlan = async () => {
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("plan, status")
-        .eq("user_id", user.id)
-        .single();
-
-      if (data && data.status === "active" && data.plan === "pro") {
-        setPlan("pro");
-      } else {
-        setPlan("free");
-      }
-      setLoading(false);
-    };
-
-    fetchPlan();
-  }, [user]);
-
+  // All features are currently free — no Pro gating
   return (
-    <SubscriptionContext.Provider value={{ plan, loading, isPro: plan === "pro" }}>
+    <SubscriptionContext.Provider value={{ plan: "pro", loading: false, isPro: true }}>
       {children}
     </SubscriptionContext.Provider>
   );
