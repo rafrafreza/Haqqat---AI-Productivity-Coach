@@ -159,7 +159,7 @@ export default function Focus() {
           </div>
         </div>
 
-        <Input placeholder="What are you working on?" value={label} onChange={e => setLabel(e.target.value)} className="bg-secondary border-border max-w-xs mx-auto mb-6 text-center" />
+        <Input placeholder="What are you working on?" value={label} onChange={e => setLabel(e.target.value)} className="max-w-xs mx-auto mb-6 text-center" />
 
         <div className="flex items-center justify-center gap-3">
           {!isRunning ? (
