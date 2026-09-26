@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { getActivities, saveActivities, todayStr, generateId, type Activity } from "@/lib/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -130,9 +131,7 @@ function ActivityCard({ activity, onDelete }: { activity: Activity; onDelete: (i
           {activity.duration && <span className="text-xs text-muted-foreground">{activity.duration}m</span>}
         </div>
       </div>
-      <button onClick={() => onDelete(activity.id)} className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 transition-all mt-1">
-        <Trash2 size={15} />
-      </button>
+      <DeleteConfirmDialog onConfirm={() => onDelete(activity.id)} iconSize={15} />
     </div>
   );
 }

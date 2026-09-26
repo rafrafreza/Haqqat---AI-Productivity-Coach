@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Plus, Mail, MailOpen, Lock, Unlock, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { useTrack } from "@/hooks/useTrack";
+import { Plus, Mail, MailOpen, Lock, Unlock, ChevronDown, ChevronRight } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { getFutureLetters, saveFutureLetters, generateId, todayStr, type FutureLetter, type Prediction } from "@/lib/store";
 import { useXPAward } from "@/hooks/useXP";
 import { notifyXP } from "@/components/XPNotification";
@@ -10,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 
 export default function FutureLetters() {
+  const { track } = useTrack();
   const [letters, setLetters] = useState<FutureLetter[]>([]);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -37,6 +40,7 @@ export default function FutureLetters() {
       isRevealed: false,
     };
     update([letter, ...letters]);
+    track("future_letter_written");
     const result = grantXP('letter', 'Wrote a future letter');
     notifyXP(result);
     setSubject(""); setContent(""); setDeliveryDate(""); setMood("hopeful");
@@ -179,7 +183,7 @@ export default function FutureLetters() {
                     <p className="text-xs text-muted-foreground">Written {l.writtenDate} · Opens in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</p>
                   </div>
                   <span className="text-xs text-muted-foreground">{moodEmojis[l.mood]}</span>
-                  <button onClick={() => deleteLetter(l.id)} className="opacity-0 group-hover:opacity-100 text-destructive"><Trash2 size={14} /></button>
+                  <DeleteConfirmDialog onConfirm={() => deleteLetter(l.id)} />
                 </div>
               );
             })}

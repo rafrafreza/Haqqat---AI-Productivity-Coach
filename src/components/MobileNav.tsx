@@ -1,3 +1,5 @@
+import NotificationBell from "@/components/NotificationBell";
+import ThemeToggle from "@/components/ThemeToggle";
 import { LayoutDashboard, Sun, ListTodo, Timer, Trophy, Menu, X, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ClipboardCheck, Battery, Scale, Search, Mail, Radar, LogOut, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -80,7 +82,7 @@ export default function MobileNav() {
     <>
       {open && (
         <div
-          className="md:hidden fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm animate-fade-in"
+          className="md:hidden fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm animate-fade-in flex flex-col"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -92,11 +94,15 @@ export default function MobileNav() {
         >
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
             <h2 className="text-lg font-display text-primary">Haqqat</h2>
-            <button onClick={() => setOpen(false)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground">
-              <X size={22} />
-            </button>
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+              <NotificationBell compact />
+              <button onClick={() => setOpen(false)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground">
+                <X size={22} />
+              </button>
+            </div>
           </div>
-          <nav className="px-4 py-2 overflow-y-auto max-h-[calc(100vh-180px)]">
+          <nav className="px-4 py-2 overflow-y-auto flex-1">
             {allSections.map(section => (
               <div key={section.title} className="mb-4">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2 px-3">{section.title}</p>
@@ -121,7 +127,7 @@ export default function MobileNav() {
               </div>
             ))}
           </nav>
-          <div className="absolute bottom-20 left-0 right-0 px-5 border-t border-border pt-3">
+          <div className="shrink-0 px-5 pb-4 border-t border-border pt-3">
             <div className="flex items-center gap-3">
               <NavLink to="/settings" onClick={() => setOpen(false)}>
                 <Avatar className="h-8 w-8">
@@ -159,6 +165,12 @@ export default function MobileNav() {
             {label}
           </NavLink>
         ))}
+        <div
+          className="flex flex-col items-center gap-0.5 text-[10px] font-medium px-2 py-1 rounded-lg text-muted-foreground"
+        >
+          <NotificationBell compact />
+          <span>Alerts</span>
+        </div>
         <button
           onClick={() => setOpen(true)}
           className="flex flex-col items-center gap-0.5 text-[10px] font-medium px-2 py-1 rounded-lg text-muted-foreground"

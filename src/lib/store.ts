@@ -4,8 +4,10 @@ export interface Routine {
   id: string;
   name: string;
   icon: string;
-  category: 'morning' | 'work' | 'health' | 'evening' | 'other';
+  category: 'morning' | 'work' | 'health' | 'evening' | 'study' | 'class' | 'meeting' | 'exercise' | 'meditation' | 'other';
   time?: string;
+  endTime?: string;
+  description?: string;
 }
 
 export interface RoutineLog {
@@ -294,7 +296,7 @@ export const defaultPomodoroSettings: PomodoroSettings = {
 
 // ===== CRUD =====
 
-export const getRoutines = () => load(KEYS.routines, defaultRoutines);
+export const getRoutines = () => load(KEYS.routines, []);
 export const saveRoutines = (data: Routine[]) => save(KEYS.routines, data);
 
 export const getLogs = () => load<RoutineLog[]>(KEYS.logs, []);

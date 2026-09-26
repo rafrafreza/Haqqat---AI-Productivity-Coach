@@ -1,3 +1,4 @@
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +32,9 @@ import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 const queryClient = new QueryClient();
 
@@ -55,14 +59,15 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="haqqat-theme">
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <XPNotificationLayer />
-        <ConfettiLayer />
-        <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <XPNotificationLayer />
+          <ConfettiLayer />
           <Routes>
             <Route path="/landing" element={<PublicOnly><Landing /></PublicOnly>} />
             <Route path="/auth" element={<PublicOnly><Auth /></PublicOnly>} />
@@ -87,12 +92,16 @@ const App = () => (
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/insights" element={<Insights />} />
             </Route>
+            <Route path="/ghazi" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

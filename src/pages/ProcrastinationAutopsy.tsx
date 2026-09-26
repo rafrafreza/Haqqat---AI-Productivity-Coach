@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Trash2, TrendingUp, AlertTriangle, Brain, Zap } from "lucide-react";
+import { Plus, Search, TrendingUp, AlertTriangle, Brain, Zap } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import { useTrack } from "@/hooks/useTrack";
 import { getProcrastinationEntries, saveProcrastinationEntries, getProcrastinationPatterns, generateId, todayStr, type ProcrastinationEntry } from "@/lib/store";
 import { useXPAward } from "@/hooks/useXP";
 import { notifyXP } from "@/components/XPNotification";
@@ -24,6 +26,7 @@ const triggerTypes: { value: ProcrastinationEntry['triggerType']; label: string;
 const feelingOptions = ['Anxious', 'Guilty', 'Restless', 'Numb', 'Frustrated', 'Relieved', 'Bored', 'Overwhelmed', 'Calm', 'Energized'];
 
 export default function ProcrastinationAutopsy() {
+  const { track } = useTrack();
   const [entries, setEntries] = useState<ProcrastinationEntry[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -52,6 +55,7 @@ export default function ProcrastinationAutopsy() {
       note: note.trim() || undefined,
     };
     update([entry, ...entries]);
+    track("procrastination_logged");
     const result = grantXP('task', 'Procrastination autopsy logged', 10);
     notifyXP(result);
     setAvoidedTask(""); setWhatDidInstead(""); setFeelingBefore(""); setFeelingDuring("");
@@ -201,7 +205,7 @@ export default function ProcrastinationAutopsy() {
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-xs text-muted-foreground">{e.date}</span>
-                  <button onClick={() => deleteEntry(e.id)} className="opacity-0 group-hover:opacity-100 text-destructive"><Trash2 size={14} /></button>
+                  <DeleteConfirmDialog onConfirm={() => deleteEntry(e.id)} />
                 </div>
               </div>
             </div>

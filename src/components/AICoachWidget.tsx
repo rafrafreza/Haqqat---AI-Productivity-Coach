@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useTrack } from "@/hooks/useTrack";
 import { Bot, Sparkles, RefreshCw, X, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,11 +78,20 @@ async function streamFromCoach(
   onError: (msg: string) => void,
   onRemaining?: (n: number) => void,
 ) {
-  // Get the user's actual JWT token
-  const { data: { session } } = await supabase.auth.getSession();
-  const accessToken = session?.access_token;
+  // Get the user's JWT — try getSession first, refresh if needed (fixes localhost hydration issues)
+  let accessToken: string | undefined;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    accessToken = session?.access_token;
+    if (!accessToken) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      accessToken = refreshed.session?.access_token;
+    }
+  } catch {
+    // ignore, handled below
+  }
   if (!accessToken) {
-    onError("You must be logged in to use the AI Coach.");
+    onError("You must be logged in to use the AI Coach. Please sign in and try again.");
     return;
   }
 
@@ -111,7 +121,16 @@ async function streamFromCoach(
       return;
     }
     if (resp.status === 402) { onError("AI credits exhausted. Please upgrade."); return; }
-    throw new Error("Failed to get coaching tips");
+    if (resp.status === 401) { onError("Authentication error — please sign out and sign back in."); return; }
+    if (resp.status === 404) { onError("Edge function not found — make sure you deployed the 'ai-coach' function in your Supabase dashboard."); return; }
+    // Surface the actual server error message for all other failures
+    try {
+      const errData = await resp.json();
+      onError(`Error (${resp.status}): ${errData.error || errData.message || JSON.stringify(errData)}`);
+    } catch {
+      onError(`Server error (${resp.status}) — check your Supabase Edge Function logs for details.`);
+    }
+    return;
   }
   if (!resp.body) throw new Error("No response body");
 
@@ -159,6 +178,7 @@ async function streamFromCoach(
 
 
 export default function AICoachWidget() {
+  const { track } = useTrack();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -207,6 +227,7 @@ export default function AICoachWidget() {
     if (!input.trim() || loading) return;
 
     const userMsg: Message = { role: "user", content: input.trim() };
+    track("ai_coach_message_sent");
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
@@ -244,7 +265,7 @@ export default function AICoachWidget() {
   if (!open) {
     return (
       <button
-        onClick={() => { setOpen(true); if (messages.length === 0 && !loading) getInitialCoaching(); }}
+        onClick={() => { setOpen(true); track("ai_coach_opened"); if (messages.length === 0 && !loading) getInitialCoaching(); }}
         className="fixed bottom-20 md:bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all group"
       >
         <Bot size={20} />

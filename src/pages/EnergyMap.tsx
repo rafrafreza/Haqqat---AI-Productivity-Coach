@@ -1,3 +1,4 @@
+import { useTrack } from "@/hooks/useTrack";
 import { useEffect, useState } from "react";
 import { Battery, BatteryLow, BatteryMedium, BatteryFull, Zap, Brain, Coffee, Users, Inbox, Plus, Info } from "lucide-react";
 import { getEnergyLogs, saveEnergyLogs, calculateBiologicalPrimeTime, generateId, todayStr, type EnergyLog, type BiologicalPrimeTime } from "@/lib/store";
@@ -26,6 +27,7 @@ const workTypeLabels: Record<string, string> = {
 };
 
 export default function EnergyMap() {
+  const { track } = useTrack();
   const [logs, setLogs] = useState<EnergyLog[]>([]);
   const [open, setOpen] = useState(false);
   const [energy, setEnergy] = useState(7);

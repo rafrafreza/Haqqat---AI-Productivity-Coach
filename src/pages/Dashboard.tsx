@@ -183,7 +183,13 @@ export default function Dashboard() {
           <Link to="/routines" className="text-sm text-primary hover:underline">Manage →</Link>
         </div>
         <div className="space-y-2">
-          {routines.map(r => {
+          {[...routines].sort((a, b) => {
+            // Sort by time: routines with time first (ascending), then no-time routines
+            if (a.time && b.time) return a.time.localeCompare(b.time);
+            if (a.time) return -1;
+            if (b.time) return 1;
+            return 0;
+          }).map(r => {
             const done = isCompleted(r.id);
             return (
               <button

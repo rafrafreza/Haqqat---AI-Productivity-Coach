@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTrack } from "@/hooks/useTrack";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -35,6 +36,7 @@ const slideVariants = {
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { track } = useTrack();
   const { user } = useAuth();
   const { updateProfile } = useProfile();
   const [step, setStep] = useState(0);
@@ -64,6 +66,7 @@ export default function Onboarding() {
       localStorage.setItem("dayflow_goals", JSON.stringify(selectedGoals));
     }
     setSaving(false);
+    track("onboarding_completed");
     navigate("/", { replace: true });
   };
 

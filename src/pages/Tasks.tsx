@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, CheckCircle2, Circle, AlertTriangle, Clock, Zap, Inbox, ArrowUp, Filter } from "lucide-react";
+import { Plus, CheckCircle2, Circle, AlertTriangle, Clock, Zap, Inbox, ArrowUp, Filter } from "lucide-react";
 import { getTasks, saveTasks, generateId, getOverdueTasks, getDueSoonTasks, getTasksByEisenhower, type Task } from "@/lib/store";
 import { useXPAward } from "@/hooks/useXP";
 import { notifyXP } from "@/components/XPNotification";
@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import { useTrack } from "@/hooks/useTrack";
 
 const priorityLabels: Record<Task['priority'], string> = {
   'urgent-important': '🔴 Do First',
@@ -35,7 +37,8 @@ export default function Tasks() {
   const [view, setView] = useState<'matrix' | 'list'>('matrix');
 
   const { grantXP } = useXPAward();
-  useEffect(() => { setTasks(getTasks()); }, []);
+  const { track } = useTrack();
+  useEffect(() => { setTasks(getTasks()); track("feature_viewed", { feature: "tasks" }); }, []);
 
   const update = (t: Task[]) => { setTasks(t); saveTasks(t); };
 
@@ -48,6 +51,7 @@ export default function Tasks() {
       createdAt: new Date().toISOString(),
     };
     update([task, ...tasks]);
+    track("task_created");
     setTitle(""); setDescription(""); setDeadline(""); setPriority("not-urgent-important"); setEstimatedMinutes(""); setOpen(false);
   };
 
@@ -62,6 +66,7 @@ export default function Tasks() {
     if (completing) {
       const result = grantXP('task', `Completed: ${task?.title || 'task'}`);
       notifyXP(result);
+      track("task_completed");
     }
   };
 
@@ -171,19 +176,23 @@ function TaskItem({ task, onToggle, onDelete, showPriority }: { task: Task; onTo
   const done = task.status === 'done';
   const isOverdue = !done && task.deadline && task.deadline < new Date().toISOString().slice(0, 10);
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all group ${done ? 'border-border/50 bg-secondary/30' : isOverdue ? 'border-destructive/30 bg-destructive/5' : 'border-border hover:border-primary/20 bg-card'}`}>
-      <button onClick={() => onToggle(task.id)} className="shrink-0">
+    <div className={`flex items-start gap-3 p-3 rounded-lg border transition-all group ${done ? 'border-border/50 bg-secondary/30' : isOverdue ? 'border-destructive/30 bg-destructive/5' : 'border-border hover:border-primary/20 bg-card'}`}>
+      <button onClick={() => onToggle(task.id)} className="shrink-0 mt-0.5">
         {done ? <CheckCircle2 size={16} className="text-success" /> : <Circle size={16} className="text-muted-foreground" />}
       </button>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm ${done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{task.title}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          {task.deadline && <span className={`text-[10px] ${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}>{task.deadline}</span>}
-          {task.estimatedMinutes && <span className="text-[10px] text-muted-foreground">{task.estimatedMinutes}m</span>}
-          {showPriority && <span className="text-[10px] text-muted-foreground">{priorityLabels[task.priority]}</span>}
+        <p className={`text-sm font-medium ${done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{task.title}</p>
+        {task.description && (
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{task.description}</p>
+        )}
+        <div className="flex flex-wrap items-center gap-2 mt-1.5">
+          {showPriority && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{priorityLabels[task.priority]}</span>}
+          {!showPriority && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">{priorityLabels[task.priority]}</span>}
+          {task.deadline && <span className={`text-[10px] flex items-center gap-1 ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>📅 {task.deadline}{isOverdue ? ' (overdue)' : ''}</span>}
+          {task.estimatedMinutes && <span className="text-[10px] text-muted-foreground flex items-center gap-1">⏱ {task.estimatedMinutes}m</span>}
         </div>
       </div>
-      <button onClick={() => onDelete(task.id)} className="opacity-0 group-hover:opacity-100 text-destructive shrink-0"><Trash2 size={14} /></button>
+      <DeleteConfirmDialog onConfirm={() => onDelete(task.id)} />
     </div>
   );
 }

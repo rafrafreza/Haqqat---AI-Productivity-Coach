@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Sun, Plus, X, Clock, Zap, Heart, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
 import { getMorningRituals, saveMorningRituals, getEnergyLogs, calculateBiologicalPrimeTime, getTasks, todayStr, generateId, type MorningRitual, type RitualTimeBlock, type Task, type BiologicalPrimeTime } from "@/lib/store";
 import { useXPAward } from "@/hooks/useXP";
+import { useTrack } from "@/hooks/useTrack";
 import { notifyXP } from "@/components/XPNotification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,11 +17,13 @@ const ENERGY_LABELS: Record<string, { label: string; color: string; icon: string
 
 export default function MorningRitualPage() {
   const { grantXP } = useXPAward();
+  const { track } = useTrack();
   const [rituals, setRituals] = useState<MorningRitual[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [primeTime, setPrimeTime] = useState<BiologicalPrimeTime[]>([]);
   const [step, setStep] = useState(0); // 0=review, 1=intention, 2=priorities, 3=timeblocks, 4=done
   const today = todayStr();
+  const [selectedRitual, setSelectedRitual] = useState<MorningRitual | null>(null);
 
   // Form state
   const [yesterdayReflection, setYesterdayReflection] = useState('');
@@ -78,6 +81,7 @@ export default function MorningRitualPage() {
   };
 
   const completeRitual = () => {
+    track("morning_ritual_completed");
     const ritual: MorningRitual = {
       id: generateId(),
       date: today,
@@ -390,19 +394,101 @@ export default function MorningRitualPage() {
       {/* Past rituals */}
       {rituals.length > 0 && step === 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-display text-foreground mb-4">Recent Rituals</h3>
+          <h3 className="text-lg font-display text-foreground mb-4">Past Rituals</h3>
           <div className="space-y-2">
-            {rituals.slice(-5).reverse().map(r => (
-              <div key={r.id} className="p-4 bg-card border border-border rounded-xl">
+            {rituals.filter(r => r.date !== today).slice(-14).reverse().map(r => (
+              <button
+                key={r.id}
+                onClick={() => setSelectedRitual(r)}
+                className="w-full p-4 bg-card border border-border rounded-xl hover:border-primary/30 hover:bg-primary/5 transition-all text-left group"
+              >
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-foreground">{r.date}</p>
-                  <span className="text-sm text-primary font-medium">{r.intentionWord}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Sun size={14} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{new Date(r.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {r.topPriorities.filter(Boolean).length} priorities · {r.gratitude.filter(Boolean).length} gratitudes
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {r.intentionWord && <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{r.intentionWord}</span>}
+                    <ArrowRight size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {r.topPriorities.length} priorities · {r.timeBlocks.length} blocks · {r.gratitude.length} gratitudes
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Past ritual detail modal */}
+      {selectedRitual && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
+          onClick={() => setSelectedRitual(null)}>
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg mt-8 mb-8"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <div>
+                <h3 className="font-display text-foreground text-lg">Morning Ritual</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {new Date(selectedRitual.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
               </div>
-            ))}
+              <button onClick={() => setSelectedRitual(null)}
+                className="w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {selectedRitual.intentionWord && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
+                  <Sparkles size={18} className="mx-auto text-primary mb-1" />
+                  <p className="text-xl font-bold text-primary">{selectedRitual.intentionWord}</p>
+                  <p className="text-xs text-muted-foreground">Intention word</p>
+                </div>
+              )}
+              {selectedRitual.topPriorities.filter(Boolean).length > 0 && (
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-3">🎯 Top Priorities</h4>
+                  {selectedRitual.topPriorities.filter(Boolean).map((p, i) => (
+                    <div key={i} className="flex items-center gap-3 py-1.5">
+                      <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{i + 1}</span>
+                      <span className="text-sm text-foreground">{p}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {selectedRitual.timeBlocks.length > 0 && (
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-3">📅 Time Blocks</h4>
+                  {selectedRitual.timeBlocks.map(b => (
+                    <div key={b.id} className="flex items-center gap-3 py-1.5">
+                      <Clock size={13} className="text-muted-foreground shrink-0" />
+                      <span className="text-xs text-muted-foreground w-24 shrink-0">{b.startTime}–{b.endTime}</span>
+                      <span className="text-sm text-foreground">{b.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {selectedRitual.gratitude.filter(Boolean).length > 0 && (
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-3">🙏 Gratitude</h4>
+                  {selectedRitual.gratitude.filter(Boolean).map((g, i) => (
+                    <p key={i} className="text-sm text-muted-foreground py-1">• {g}</p>
+                  ))}
+                </div>
+              )}
+              {selectedRitual.yesterdayReflection && (
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">💭 Yesterday's Reflection</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{selectedRitual.yesterdayReflection}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -455,3 +541,21 @@ function CompletedRitualView({ ritual, primeTime }: { ritual: MorningRitual; pri
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

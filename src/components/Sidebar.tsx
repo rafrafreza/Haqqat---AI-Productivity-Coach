@@ -1,3 +1,5 @@
+import NotificationBell from "@/components/NotificationBell";
+import ThemeToggle from "@/components/ThemeToggle";
 import { LayoutDashboard, CheckCircle2, Activity, BarChart3, Lightbulb, Target, ListTodo, Timer, ClipboardCheck, Battery, Scale, Search, Mail, Radar, Trophy, Sun, LogOut, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -85,6 +87,14 @@ export default function Sidebar() {
 
       </nav>
       <div className="mt-auto pt-6 border-t border-border">
+        {/* Controls row: theme + notifications */}
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Appearance</span>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <NotificationBell />
+          </div>
+        </div>
         <NavLink to="/settings" className="flex items-center gap-3 mb-3 p-1 rounded-lg hover:bg-secondary transition-colors">
           <Avatar className="h-8 w-8">
             <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Plus, Target, ChevronDown, ChevronRight, Trash2, CheckCircle2, Circle, Calendar, Flag } from "lucide-react";
+import { Plus, Target, ChevronDown, ChevronRight, CheckCircle2, Circle, Calendar, Flag, Trash2} from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import { useTrack } from "@/hooks/useTrack";
 import { getGoals, saveGoals, generateId, getGoalProgress, type Goal, type Milestone } from "@/lib/store";
 import { useXPAward } from "@/hooks/useXP";
 import { notifyXP } from "@/components/XPNotification";
@@ -25,9 +27,10 @@ export default function Goals() {
   const [milestoneInput, setMilestoneInput] = useState("");
   const [newMilestones, setNewMilestones] = useState<string[]>([]);
 
-  useEffect(() => { setGoals(getGoals()); }, []);
+  useEffect(() => { setGoals(getGoals()); track("feature_viewed", { feature: "goals" }); }, []);
 
   const { grantXP } = useXPAward();
+  const { track } = useTrack();
   const update = (g: Goal[]) => { setGoals(g); saveGoals(g); };
 
   const addGoal = () => {
@@ -39,6 +42,7 @@ export default function Goals() {
       createdAt: new Date().toISOString(), status: 'active',
     };
     update([goal, ...goals]);
+    track("goal_created");
     setTitle(""); setDescription(""); setCategory("career"); setDeadline(""); setPriority("medium"); setNewMilestones([]); setOpen(false);
   };
 
@@ -59,6 +63,7 @@ export default function Goals() {
     if (completing) {
       const result = grantXP('goal', `Milestone: ${milestone?.title || 'completed'}`, 15);
       notifyXP(result);
+      track("milestone_completed");
     }
   };
 
@@ -170,7 +175,7 @@ export default function Goals() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={(e) => { e.stopPropagation(); toggleStatus(goal.id); }} className="text-success hover:opacity-80"><CheckCircle2 size={18} /></button>
-                    <button onClick={(e) => { e.stopPropagation(); deleteGoal(goal.id); }} className="text-destructive hover:opacity-80"><Trash2 size={15} /></button>
+                    <DeleteConfirmDialog onConfirm={() => deleteGoal(goal.id)} className="text-destructive hover:opacity-80" iconSize={15} />
                   </div>
                 </div>
               </div>
@@ -202,7 +207,7 @@ export default function Goals() {
                 <span>{categoryEmojis[g.category]}</span>
                 <span className="text-sm text-foreground line-through flex-1">{g.title}</span>
                 <button onClick={() => toggleStatus(g.id)} className="text-xs text-muted-foreground hover:text-foreground">Reopen</button>
-                <button onClick={() => deleteGoal(g.id)} className="text-destructive"><Trash2 size={14} /></button>
+                <DeleteConfirmDialog onConfirm={() => deleteGoal(g.id)} className="text-destructive" iconSize={14} />
               </div>
             ))}
           </div>

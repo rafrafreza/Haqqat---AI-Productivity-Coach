@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Plus, Scale, ChevronDown, ChevronRight, CheckCircle2, Clock, AlertCircle, Trash2 } from "lucide-react";
+import { Plus, Scale, ChevronDown, ChevronRight, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import { useTrack } from "@/hooks/useTrack";
 import { getDecisions, saveDecisions, getDecisionAccuracy, generateId, todayStr, type Decision } from "@/lib/store";
 import { useXPAward } from "@/hooks/useXP";
 import { notifyXP } from "@/components/XPNotification";
@@ -14,6 +16,7 @@ const categories = ['career', 'health', 'financial', 'relationship', 'personal',
 const categoryEmojis: Record<string, string> = { career: '💼', health: '💪', financial: '💰', relationship: '❤️', personal: '🌟', other: '📌' };
 
 export default function DecisionJournal() {
+  const { track } = useTrack();
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [open, setOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export default function DecisionJournal() {
   const [lessonLearned, setLessonLearned] = useState("");
 
   const { grantXP } = useXPAward();
-  useEffect(() => { setDecisions(getDecisions()); }, []);
+  useEffect(() => { setDecisions(getDecisions()); track("feature_viewed", { feature: "decisions" }); }, []);
 
   const update = (d: Decision[]) => { setDecisions(d); saveDecisions(d); };
 
@@ -52,6 +55,7 @@ export default function DecisionJournal() {
       category, revisitDate: revisitDate.toISOString().slice(0, 10), status: 'pending',
     };
     update([decision, ...decisions]);
+    track("decision_logged");
     const result = grantXP('decision', `Decision: ${title.trim()}`);
     notifyXP(result);
     resetForm();
@@ -214,7 +218,7 @@ export default function DecisionJournal() {
                   {d.status === 'pending' && !isReviewing && (
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => setReviewOpen(d.id)} className="gap-1.5"><Scale size={14} /> Review Outcome</Button>
-                      <Button variant="outline" size="sm" onClick={() => deleteDecision(d.id)} className="text-destructive"><Trash2 size={14} /></Button>
+                      <DeleteConfirmDialog onConfirm={() => deleteDecision(d.id)} className="text-destructive border border-border rounded-md px-2 py-1 text-xs flex items-center gap-1 hover:bg-destructive/10" iconSize={14} label="Delete" />
                     </div>
                   )}
 

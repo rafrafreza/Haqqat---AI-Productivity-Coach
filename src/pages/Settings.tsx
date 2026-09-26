@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Save, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Save, Loader2 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 
 const TIMEZONES = [
@@ -19,14 +20,12 @@ export default function Settings() {
   const { user } = useAuth();
   const { profile, loading, updateProfile } = useProfile();
   const [displayName, setDisplayName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [timezone, setTimezone] = useState("UTC");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name || "");
-      setAvatarUrl(profile.avatar_url || "");
       setTimezone(profile.timezone || "UTC");
     }
   }, [profile]);
@@ -35,7 +34,6 @@ export default function Settings() {
     setSaving(true);
     const result = await updateProfile({
       display_name: displayName || null,
-      avatar_url: avatarUrl || null,
       timezone,
     });
     setSaving(false);
@@ -62,11 +60,12 @@ export default function Settings() {
       <p className="text-muted-foreground mb-8">Manage your profile and preferences</p>
 
       <div className="bg-card border border-border rounded-xl p-6 space-y-6">
-        {/* Avatar preview */}
+        {/* Profile preview */}
         <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-            <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+          <Avatar className="h-14 w-14">
+            <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary">
+              {initials}
+            </AvatarFallback>
           </Avatar>
           <div>
             <p className="font-medium text-foreground">{displayName || "No name set"}</p>
@@ -85,16 +84,11 @@ export default function Settings() {
           />
         </div>
 
-        {/* Avatar URL */}
+        {/* Email (read only) */}
         <div className="space-y-2">
-          <Label htmlFor="avatarUrl">Avatar URL</Label>
-          <Input
-            id="avatarUrl"
-            value={avatarUrl}
-            onChange={e => setAvatarUrl(e.target.value)}
-            placeholder="https://example.com/avatar.jpg"
-          />
-          <p className="text-xs text-muted-foreground">Paste a link to your profile picture</p>
+          <Label>Email</Label>
+          <Input value={user?.email || ""} disabled className="opacity-60" />
+          <p className="text-xs text-muted-foreground">Email cannot be changed</p>
         </div>
 
         {/* Timezone */}
@@ -110,6 +104,13 @@ export default function Settings() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Theme */}
+        <div className="space-y-2">
+          <Label>Appearance</Label>
+          <ThemeToggle variant="full" />
+          <p className="text-xs text-muted-foreground">Choose between light and dark mode</p>
         </div>
 
         <Button onClick={handleSave} disabled={saving} className="w-full">

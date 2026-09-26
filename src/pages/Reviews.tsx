@@ -1,3 +1,4 @@
+import { useTrack } from "@/hooks/useTrack";
 import { useEffect, useState } from "react";
 import { Plus, Star, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight } from "lucide-react";
 import { getWeeklyReviews, saveWeeklyReviews, generateId, getWeekStart, calculateDailyProductivityScore, type WeeklyReview } from "@/lib/store";
@@ -10,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 
 export default function Reviews() {
+  const { track } = useTrack();
   const [reviews, setReviews] = useState<WeeklyReview[]>([]);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
