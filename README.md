@@ -1,115 +1,102 @@
-# Haqqat 🚀 | Align · Build · Evolve
+<div align="center">
+  <img src="https://img.shields.io/badge/HAQQAT-Align%20%C2%B7%20Build%20%C2%B7%20Evolve-000000?style=for-the-badge&logo=react" alt="Haqqat Banner" />
+  <br />
+  <p><b>A Gamified, AI-Native Productivity Operating System</b></p>
 
-[![Live in Production](https://img.shields.io/badge/Live_App-haqqat.netlify.app-2ea44f?style=for-the-badge&logo=netlify)](https://haqqat.netlify.app/)
-[![React](https://img.shields.io/badge/React-18-blue.svg?style=for-the-badge&logo=react)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-Edge%20Functions-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
-[![Google Gemini](https://img.shields.io/badge/Gemini%202.0-Flash%20Lite-FFCC00?style=for-the-badge&logo=google)](https://aistudio.google.com/)
+  [![Live in Production](https://img.shields.io/badge/Live_App-haqqat.netlify.app-2ea44f?style=for-the-badge&logo=netlify)](https://haqqat.netlify.app/)
+  [![React](https://img.shields.io/badge/React-18-blue.svg?style=for-the-badge&logo=react)](https://reactjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+  [![Supabase](https://img.shields.io/badge/Supabase-Edge%20Functions-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
+  [![Google Gemini](https://img.shields.io/badge/Gemini%202.0-Flash%20Lite-FFCC00?style=for-the-badge&logo=google)](https://aistudio.google.com/)
+  [![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
+</div>
 
-> **Live Demo:** [https://haqqat.netlify.app/](https://haqqat.netlify.app/)
+<br />
 
-**Haqqat** is a production-grade, AI-native productivity ecosystem designed to move beyond traditional habit tracking. Operating flawlessly in production for months, it synthesizes user behavioral data—from task completion and focus sessions to energy mapping—and delivers hyper-personalized, context-aware coaching via Google's Gemini 2.0 LLM. 
+**Haqqat** is not just another habit tracker—it is a production-ready, holistic productivity ecosystem. It synthesizes behavioral psychology, robust data analytics, and Gamification with an embedded **Google Gemini 2.0 AI Coach**. 
 
-Built with scalability, security, and user retention in mind, this application serves as a comprehensive case study in **Full-Stack Engineering**, **Generative AI Integration**, and **Serverless Architecture**.
-
----
-
-## 🌟 Core Product Features
-
-Haqqat is engineered as a holistic operating system for personal growth, blending behavioral psychology with gamification.
-
-- **🤖 Context-Aware AI Coach:** An LLM-powered assistant that reads the user's live productivity state (tasks, focus minutes, routine streaks) to deliver non-generic, highly actionable insights.
-- **🛡️ Enterprise-Grade Authentication:** Seamless Google OAuth and Email/Password flows managed via Supabase Auth, strictly enforced by PostgreSQL Row Level Security (RLS).
-- **📊 Behavioral Analytics Engine:** Features like the **Decision Journal**, **Energy Map**, **Life Balance Radar**, and **Procrastination Autopsy** allow users to track cognitive patterns alongside traditional tasks.
-- **🎮 Gamification & Retention:** A custom XP progression system dynamically rewards users for completing routines, achieving goals, and maintaining streaks—driving long-term engagement.
-- **⏱️ Deep Work & Goal Tracking:** Integrated Pomodoro focus sessions (`/focus`), comprehensive weekly reviews (`/reviews`), and milestone-driven goal management (`/goals`).
+Designed for high-performance individuals, Haqqat operates flawlessly in production, managing real-world complexities like edge computing, cloud synchronization, intelligent rate limiting, and enterprise-grade authentication.
 
 ---
 
-## 🏗️ Architecture & Engineering Decisions
+## ✨ Features That Set Haqqat Apart
 
-For technical leaders, CTOs, and peer engineers exploring this repository, Haqqat was architected to balance rapid feature delivery with long-term maintainability, strict cost control, and performance.
+### 🤖 The Context-Aware AI Coach (Edge Serverless)
+Unlike generic chatbots, Haqqat's AI reads your live local data (focus minutes, energy maps, overdue tasks) before replying.
+- **RAG / Context Injection:** Your state is fed into the LLM prompt dynamically.
+- **Zero-Latency Streaming:** Deno Edge Functions stream the Gemini response via Server-Sent Events (SSE).
+- **Cost Management:** Custom DB triggers and UI components (`AILimitGiftBanner`) elegantly handle rate-limiting.
 
-### 1. Serverless AI Inference at the Edge
-Instead of exposing API keys on the client or building a heavyweight Node.js backend, all GenAI requests are routed through **Deno-based Supabase Edge Functions**. 
-- **Zero Cold Starts:** Edge deployment ensures immediate AI responses.
-- **Streaming UI:** Utilizes Server-Sent Events (SSE) to stream LLM tokens directly to the React frontend for a latency-free UX.
-- **Context Injection:** The edge function dynamically builds the LLM prompt by querying the user's live database state *before* pinging the Gemini API, ensuring the AI has the exact context needed.
+### 🎮 Deep Gamification Engine
+- **XP & Levels:** Every completed routine, focus session, and milestone grants XP, triggering beautiful UI celebrations (`Confetti.tsx`, `XPNotification`).
+- **Streaks & Multipliers:** Built-in hooks (`useXP`, `useTrack`) calculate productivity scores and streaks in real-time.
 
-### 2. Cost Management & Rate Limiting
-To prevent runaway LLM API costs in production, a custom rate-limiting architecture was engineered:
-- Database triggers and Edge Function logic strictly monitor `ai_coach_usage`.
-- Daily token/message limits are enforced at the backend level, bypassing client-side tampering.
+### 📊 Behavioral Analytics Suite
+Haqqat goes beyond simple task checkboxes:
+- **Decision Journal & Procrastination Autopsy:** Track *why* you delay tasks.
+- **Energy Map & Life Balance Radar:** Visualize your daily burnout and peak cognitive hours.
+- **Weekly Reviews & Future Letters:** Long-term reflective frameworks.
 
-### 3. Secure, Scalable Backend
-- **PostgreSQL & RLS:** Every table is secured via strict Row Level Security policies. Users can strictly read/write only their own data.
-- **BaaS Synergy:** Leveraging Supabase allows the application to scale effortlessly without DevOps overhead, handling auth, database scaling, and edge computing under one unified ecosystem.
-
-### 4. Resilient Frontend Architecture
-- **React 18 + Vite:** Blazing fast hot-module replacement during development and optimized, minified bundles in production.
-- **State & Caching:** Heavy utilization of localized state management and efficient data fetching to ensure a snappy, offline-resilient user experience.
-- **Modern UI/UX:** Built with Tailwind CSS, Shadcn UI, and Radix primitives for an accessible, responsive, and aesthetically premium interface.
+### ☁️ Cloud Sync & Offline Resilience
+- **Hybrid State:** Merges lightning-fast local state (`store.ts`) with Supabase PostgreSQL (`cloudSync.ts`) to ensure data is never lost, while maintaining a snappy, offline-first feel.
+- **Auth & Pro Gates:** Integrated Google OAuth and email auth, with modular premium feature flagging (`ProGate`).
 
 ---
 
-## ⚙️ System Flow
+## 🏗️ Architecture & Data Flow
+
+Haqqat leverages a modern decoupled architecture. The frontend is heavily optimized React, while the backend utilizes Supabase for PostgreSQL, Auth, and Edge computing.
 
 ```mermaid
 graph TD;
-    Client[React Frontend (Netlify)] -->|Google OAuth / JWT| Gateway(Supabase API Gateway);
+    Client["React Frontend (Netlify)"] -->|"Google OAuth / JWT"| Gateway("Supabase API Gateway");
     
     subgraph Supabase Ecosystem
-        Gateway -->|Verify JWT| Edge[Deno Edge Function: AI Coach];
-        Gateway -->|Enforce RLS| DB[(PostgreSQL Database)];
-        Edge <-->|Fetch User Context| DB;
-        Edge <-->|Log Usage/Rate Limit| DB;
+        Gateway -->|"Verify JWT"| Edge["Deno Edge Function (AI Coach)"];
+        Gateway -->|"Enforce RLS"| DB[("PostgreSQL Database")];
+        Edge <-->|"Fetch Local Context & Sync"| DB;
+        Edge <-->|"Log Usage/Rate Limit"| DB;
     end
     
-    Edge -->|RAG / Context Injected Prompt| LLM[Google Gemini 2.0 API];
-    LLM -->|Streamed Response (SSE)| Client;
+    Edge -->|"Context Injected Prompt"| LLM["Google Gemini 2.0 API"];
+    LLM -->|"Streamed Response (SSE)"| Client;
 ```
+*(Note: GenAI API calls are securely proxy-routed through the Deno Edge Function, completely hiding keys from the client while enabling server-side rate limits).*
 
 ---
 
-## 🚀 Getting Started (Local Development)
+## 🚀 Local Setup & Deployment
 
-To run the application locally:
+Want to run Haqqat locally? It takes less than 5 minutes.
 
-### 1. Prerequisites
+### 1. Requirements
 - Node.js 18+ 
-- A [Supabase](https://supabase.com) project
-- A [Google AI Studio](https://aistudio.google.com/apikey) API key
+- A free [Supabase](https://supabase.com) project
+- A free [Google AI Studio](https://aistudio.google.com/apikey) API key
 
-### 2. Database Setup
-Execute the SQL migrations found in `supabase/migrations/` in your Supabase SQL Editor to construct the schema and RLS policies.
-
-### 3. Edge Function Deployment
-Deploy the AI microservice via the Supabase CLI:
+### 2. Configure Database & Edge Functions
+1. Run the SQL files in `supabase/migrations/` in your Supabase SQL Editor.
+2. Deploy the AI service:
 ```bash
 supabase functions deploy ai-coach
-supabase secrets set --env-file ./supabase/.env
+supabase secrets set GEMINI_API_KEY=your_key
 ```
-*(Ensure JWT verification is disabled for the `ai-coach` function in the Supabase UI, as it handles verification internally).*
+*(Toggle "Enforce JWT Verification" OFF in the Supabase UI for this function, as it handles its own auth validation).*
 
-### 4. Client Setup
-Clone the repository, install dependencies, and populate your `.env`:
+### 3. Spin up the Client
+Clone the repository, install packages, and create your `.env` (use `.env.example` as a template):
 ```bash
 npm install
-```
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
-VITE_SUPABASE_PROJECT_ID=your-project-id
-```
-Start the development server:
-```bash
 npm run dev
 ```
 
 ---
 
-## 📜 License & Operations
+## 💼 Technical Philosophy
 
-Haqqat is currently operating in production at [haqqat.netlify.app](https://haqqat.netlify.app/). The CI/CD pipeline is fully automated via Netlify, seamlessly deploying optimized builds upon merges to the `main` branch. 
+For engineers and technical leaders reviewing this repository, Haqqat was built with a philosophy of **pragmatic scaling**:
+1. **BaaS Leverage:** Using Supabase eliminated months of DevOps overhead while retaining the raw power of PostgreSQL.
+2. **Edge Computing over Node.js:** By placing the AI orchestration layer on Deno Edge functions, the app sidesteps the cold starts and heavy infrastructure of a traditional Express backend.
+3. **UX First:** Using Radix UI primitives and Tailwind ensures accessibility without sacrificing aesthetic flexibility, while optimistic UI updates make the app feel instant.
 
-*Designed and engineered with a focus on modern web standards, scalable architecture, and applied artificial intelligence.*
+Haqqat is live, tested, and actively used. Check out the [Live App](https://haqqat.netlify.app/)!
